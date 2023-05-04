@@ -1,2 +1,3 @@
-# hm_markdown_simple_server
-Markdownの 簡易リアルタイムサーバー 兼 ライブサーバー
+# HmMarkdownSimpleServer
+秀丸エディタ - ブラウザ枠用 - 簡易Markdownサーバー
+- Markdownの 簡易リアルタイムサーバー 兼 ライブサーバー
