@@ -1,0 +1,170 @@
+﻿/*
+ * HmMarkdownSimpleServer v1.2.0.1
+ *
+ * Copyright (c) 2023 Akitsugu Komiyama
+ * under the MIT License
+ */
+
+RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を取り出す
+    $LAST_MARKDOWN_SERVER_COM = getstaticvariable("HmMarkdownSimpleServerLastObj", 2);
+
+    // 有効な値があるならば...
+    if ($LAST_MARKDOWN_SERVER_COM != "") {
+        #LAST_MARKDOWN_SERVER_COM = val($LAST_MARKDOWN_SERVER_COM); // 文字列の数字 ⇒ 数値へ
+
+        // 該当の値をToStringして本当に「HmMarkdownSimpleServer」のオブジェクトか確認する。
+        // .NET で制作しているものはすべてのオブジェクトがToStringを持つ、それは「名前空間.クラス名」なのでこのような判定が出来る。
+        $OBJ_CLASS_NAME = member(#LAST_MARKDOWN_SERVER_COM, "ToString");
+        if ($OBJ_CLASS_NAME == "HmMarkdownSimpleServer.HmMarkdownSimpleServer") {
+            releaseobject(#LAST_MARKDOWN_SERVER_COM); // HmMarkdownSimpleServer.HmMarkdownSimpleServer 内の「OnReleaseObject」も実行される。
+        }
+    }
+
+RELEASE_OLD_FETCH_SERVER_OBJECT:
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を取り出す
+    $LAST_FETCH_SERVER_COM = getstaticvariable("HmMarkdownFetchServerLastObj", 2);
+
+    // 有効な値があるならば...
+    if ($LAST_FETCH_SERVER_COM != "") {
+        #LAST_FETCH_SERVER_COM = val($LAST_FETCH_SERVER_COM); // 文字列の数字 ⇒ 数値へ
+
+        // 該当の値をToStringして本当に「HmMarkdownListeningServer」のオブジェクトか確認する。
+        // .NET で制作しているものはすべてのオブジェクトがToStringを持つ、それは「名前空間.クラス名」なのでこのような判定が出来る。
+        $OBJ_CLASS_NAME = member(#LAST_FETCH_SERVER_COM, "ToString");
+        if ($OBJ_CLASS_NAME == "HmMarkdownSimpleServer.HmMarkdownListeningServer") {
+            releaseobject(#LAST_FETCH_SERVER_COM); // HmMarkdownSimpleServer.HmMarkdownListeningServer 内の「OnReleaseObject」も実行される。
+        }
+    }
+
+
+EXIT_IF_FILENAME_IS_EMPTY:
+
+    // 無題なら何もしない。マクロの一番先頭ではなく、この位置にある理由は、
+    // 「１つ前に使っていたMarkdownサーバーオブジェクトの破棄」はしておきたいため、
+    if (filename2 == "") {
+        endmacro;
+    }
+
+
+CREATE_MARKDOWN_SERVER_OBJECT:
+
+    // Markdownサーバー関連オブジェクトの生成。秀丸のファイル名変更や、ファイル保存による更新、Markdownサーバーのプロセスオブジェクトを管理する。
+    #MARKDOWN_SERVER_COM = createobject( currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownSimpleServer");
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を記憶しておく
+    setstaticvariable "HmMarkdownSimpleServerLastObj", str(#MARKDOWN_SERVER_COM), 2; // 
+
+    // マクロが終了してもオブジェクトは維持。シングルトンにするため、マクロの「CLEAR_OLD_MARKDOWN_SERVER_OBJECT:」で古い起動は掃除している。
+    keepobject #MARKDOWN_SERVER_COM, 1;
+
+    // 掃除される際(releaseobjectやプロセスを閉じた、何か秀丸レベルで致命的マクロエラーとなった際)に呼び出される
+    setcomdetachmethod #MARKDOWN_SERVER_COM, "OnReleaseObject";
+
+
+MAKE_HTML_TEMPLATE:
+
+    $HTML_TEMPLATE =
+    """"""""""""""""""""""""""""""""""""""""
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
+    <base href="$BASE_HREF">
+    </head>
+    <body class="markdown-body">
+    <script>
+    function scollToPageBgn() {
+        window.location.href = "#the_bgn_line_of_markdown_page"
+    }
+    function scollToPageEnd() {
+        window.location.href = "#the_end_line_of_markdown_page"
+    }
+    function updateFetch(port) {
+        try {
+            fetch("http://localhost:" + port)
+            .then(response => response.text())
+            .then(data => {
+                let panel = document.getElementById("update_panel");
+                let new_html = data.toString();
+                if (panel.innerHTML != new_html) {
+                    panel.innerHTML = new_html;
+                }
+            })
+            .catch(error => {
+            });
+        } catch(e) {
+
+        }
+    }
+    </script>
+    <a name="the_bgn_line_of_markdown_page">
+    <div id="update_panel">$HTML</div>
+    <a name="the_end_line_of_markdown_page">
+    <br>
+    </body>
+    </html>
+    """""""""""""""""""""""""""""""""""""""";
+
+
+LAUNCH_MARKDOWN_SERVER:
+
+    // 各種情報を基に、Markdownを簡易サーバーとして起動
+    $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", $HTML_TEMPLATE);
+
+
+CREATE_FETCH_SERVER_OBJECT:
+
+    #FETCH_SERVER = createobject(currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownListeningServer");
+
+    setstaticvariable "HmMarkdownFetchServerLastObj", str(#FETCH_SERVER), 2; // 
+
+    keepobject #FETCH_SERVER, 1;
+
+    setcomdetachmethod #FETCH_SERVER, "OnReleaseObject";
+
+
+FIND_MARKDOWN_FETCH_SERVER_AVILABLE_PORT:
+
+    #BGN_PORT = 7101;                     // サーバー用に利用する 最低のポート番号
+    #END_PORT = 7200;                     // サーバー用に利用する 最大のポート番号。 最低でも50ポート幅は用意すること。
+
+    // 全秀丸共有で#MARKDOWN_HOSTPORTを持つ。１つずつインクリメントで「全秀丸プロセス」でユニークとし、まずは被りにくいようにする
+    $STR_PORT = getstaticvariable("HmMarkdownFetchServerLastPort", 1);
+
+    // 初回起動時は、#BGN_PORT を「かぶりにくい番号」とする。
+    if ($STR_PORT == "") {
+
+        #MARKDOWN_HOSTPORT = #BGN_PORT;
+
+    // 最後に起動した際のポート番号に1足したものを「被りにくい番号」とする。
+    } else {
+        #MARKDOWN_HOSTPORT = val($STR_PORT);
+
+        // 予め１ずつずらしているのは、「本当に使われていない」という判定はどうあってもOSに訪ねたとしても完璧にはならないため、
+        // 最低１ずつずらしていくことで、次に行う「本当に使われていないPort番号」の探索が「万が一」誤っていたとしても、Port番号が変わることにより問題なく動作する可能性が十分あるため。
+        #MARKDOWN_HOSTPORT = #MARKDOWN_HOSTPORT + 1;
+
+        // 指定のPort範囲外に溢れていたら、一番小さなPortから
+        if (#MARKDOWN_HOSTPORT < #BGN_PORT || #END_PORT-20 < #MARKDOWN_HOSTPORT) {
+            #MARKDOWN_HOSTPORT = #BGN_PORT;
+        }
+    }
+
+    setstaticvariable "HmMarkdownFetchServerLastPort", str(#MARKDOWN_HOSTPORT), 1;
+
+LAUNCH_MARKDOWN_FETCH_SERVER:
+
+    #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
+
+    if (#PORT == 0) {
+        // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
+        endmacro;
+    }
+
+
+WEBVIEW2_ASYNC:
+    jsmode "WebView2\\HmMarkdownSimpleServer";
+    execjs currentmacrodirectory + @"\HmMarkdownSimpleServerAsync.js";

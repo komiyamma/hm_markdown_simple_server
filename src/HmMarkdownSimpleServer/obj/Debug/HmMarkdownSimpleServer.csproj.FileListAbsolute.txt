@@ -1,0 +1,16 @@
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.csproj.AssemblyReference.cache
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.csproj.CoreCompileInputs.cache
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\bin\Debug\HmMarkdownSimpleServer.dll
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\bin\Debug\HmMarkdownSimpleServer.pdb
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.dll
+G:\bbbb\HmMarkdownSimpleServer\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.pdb
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\bin\Debug\HmMarkdownSimpleServer.dll
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\bin\Debug\HmMarkdownSimpleServer.pdb
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\bin\Debug\Markdig.dll
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\bin\Debug\Markdig.pdb
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\bin\Debug\Markdig.xml
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.csproj.AssemblyReference.cache
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.csproj.CoreCompileInputs.cache
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.csproj.CopyComplete
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.dll
+G:\repogitory\hm_php_simple_server\src.markdown\HmMarkdownSimpleServer\obj\Debug\HmMarkdownSimpleServer.pdb
