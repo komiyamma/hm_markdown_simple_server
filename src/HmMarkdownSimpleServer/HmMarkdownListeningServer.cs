@@ -25,6 +25,8 @@ public interface IHmMarkdownListeningServer
 [Guid("4428D103-BBDE-4794-BCAC-A053529F8BBF")]
 public class HmMarkdownListeningServer
 {
+    static DllAssemblyResolver dasmr;
+
     CancellationTokenSource cts;
     bool isRunning = false;
 
@@ -34,6 +36,16 @@ public class HmMarkdownListeningServer
 
     public int Start(int portBGN, int portEND)
     {
+        Close();
+
+        try
+        {
+            dasmr = new DllAssemblyResolver();
+        }
+        catch (Exception e)
+        {
+        }
+
         try
         {
             port = HmUsedPortChecker.GetAvailablePort(portBGN, portEND);
@@ -169,6 +181,16 @@ public class HmMarkdownListeningServer
         {
             // Hm.OutputPane.Output(e.Message + "\r\n");
         }
+
+        try
+        {
+            dasmr = null;
+        }
+        catch (Exception)
+        {
+
+        }
+
         return 1;
     }
 
