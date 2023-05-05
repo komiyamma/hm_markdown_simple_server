@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DllAssemblyResolvers.cs" />
     <Compile Include="HmMarkdownListeningServer.cs" />
     <Compile Include="HmMarkdownSimpleServer.cs" />
     <Compile Include="HmNetCOM.cs">

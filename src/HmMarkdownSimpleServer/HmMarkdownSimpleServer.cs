@@ -19,6 +19,8 @@ namespace HmMarkdownSimpleServer;
 [Guid("613BF59D-753E-4EEF-BFDE-BC621FDFDA60")]
 public class HmMarkdownSimpleServer
 {
+    static DllAssemblyResolver dasmr;
+
     Task<string> task;
     CancellationTokenSource cts;
 
@@ -38,6 +40,8 @@ public class HmMarkdownSimpleServer
         try
         {
             Destroy();
+
+            dasmr = new DllAssemblyResolver();
 
             this.html_template = htmlTemplate;
 
@@ -293,6 +297,14 @@ public class HmMarkdownSimpleServer
             dic.Clear();
 
             return 1;
+        }
+        catch (Exception)
+        {
+
+        }
+        try
+        {
+            dasmr = null;
         }
         catch (Exception)
         {
