@@ -13,3 +13,5 @@
 - ファイル保存時更新モード
 
 の２モード自動切り替えのハイブリッド。
+
+https://秀丸マクロ.net/?page=nobu_tool_hm_markdown_simple_server
