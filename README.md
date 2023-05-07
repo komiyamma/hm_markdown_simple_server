@@ -17,3 +17,6 @@
 の２モード自動切り替えのハイブリッド。
 
 https://秀丸マクロ.net/?page=nobu_tool_hm_markdown_simple_server
+
+**HmMarkdownSimpleServer.zipを解凍するする際は、「ブロック解除」が必須なので注意。  
+「Markdig.dll」にブロックフラグが立ったままだと機能しない。**
