@@ -8,7 +8,7 @@
 ![Light Mode](https://img.shields.io/badge/Light_Mode-○-6479ff.svg)
 ![Dark Mode](https://img.shields.io/badge/Dark_Mode-○-6479ff.svg)
 
-<img src="https://秀丸マクロ.net/other_soft/hm_markdown_simple_server/cnt_hm_markdown_simple_server_01.png">
+<img src="http://秀丸マクロ.net/other_soft/hm_markdown_simple_server/cnt_hm_markdown_simple_server_01.png">
 
 秀丸エディタ - ブラウザ枠用 - 簡易Markdownサーバー
 - リアルタイム更新モード
