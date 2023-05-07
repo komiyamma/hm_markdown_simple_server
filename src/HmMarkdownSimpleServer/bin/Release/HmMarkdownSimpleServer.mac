@@ -1,9 +1,14 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.1
+ * HmMarkdownSimpleServer v1.2.0.2
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
  */
+
+SET_REALTIME_MODE_TEXT_LENGTH_MAX:
+
+    #REALTIME_MODE_TEXT_LENGTH_MAX = 50000; // 50000文字まではリアルタイムでブラウザ枠追従モードを維持する。それを超えるとファイル保存時のみの更新。
+
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
 
@@ -77,10 +82,10 @@ MAKE_HTML_TEMPLATE:
     <body class="markdown-body">
     <script>
     function scollToPageBgn() {
-        window.location.href = "#the_bgn_line_of_markdown_page"
+        javascript:window.scrollTo(0, 0);
     }
     function scollToPageEnd() {
-        window.location.href = "#the_end_line_of_markdown_page"
+        javascript:window.scrollTo(0, (document.body.scrollHeight)*(100));
     }
     function updateFetch(port) {
         try {
@@ -100,9 +105,7 @@ MAKE_HTML_TEMPLATE:
         }
     }
     </script>
-    <a name="the_bgn_line_of_markdown_page">
     <div id="update_panel">$HTML</div>
-    <a name="the_end_line_of_markdown_page">
     <br>
     </body>
     </html>

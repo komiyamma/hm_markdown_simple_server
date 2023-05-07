@@ -1,21 +1,21 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.0.1
+ * HmMarkdownSimpleServer v1.2.0.2
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
  */
 
 // ブラウザペインのターゲット。個別枠。
-let target_browser_pane: "_each" = "_each";
+const target_browser_pane: "_each" = "_each";
 
 // 表示するべき一時ファイルのURL
-let absolute_uri: string = getVar("$ABSOLUTE_URI") as string;
+const absolute_uri: string = getVar("$ABSOLUTE_URI") as string;
 
 // ポート番号
-let port: number = getVar("#PORT") as number;
+const port: number = getVar("#PORT") as number;
 
-const livemode_max_textlength = 50000;
+const realtimemode_max_textlength: number = getVar('#REALTIME_MODE_TEXT_LENGTH_MAX') as number;
 
 // 時間を跨いで共通利用するので、varで
 if (typeof (timerHandle) === "undefined") {
@@ -54,7 +54,7 @@ async function tickMethod(): Promise<void> {
 
         let [isChange, Length] = getTotalTextChange();
         // テキスト内容が変更になっている時だけ
-        if (isChange && Length < livemode_max_textlength) {
+        if (isChange && Length < realtimemode_max_textlength) {
             browserpanecommand(
                 {
                     target: "_each",
@@ -80,7 +80,7 @@ async function tickMethod(): Promise<void> {
 
         else {
             let isUpdate = isFileLastModifyUpdated();
-            if (isUpdate && Length >= livemode_max_textlength - 1000) { // -1000しているのはギリギリ被らないようにするのではなく、LiveViewとFileViewで余裕をもたせる(境界で行ったり来たりしないように)
+            if (isUpdate && Length >= realtimemode_max_textlength - 1000) { // -1000しているのはギリギリ被らないようにするのではなく、LiveViewとFileViewで余裕をもたせる(境界で行ったり来たりしないように)
                 browserpanecommand(
                     {
                         target: "_each",
