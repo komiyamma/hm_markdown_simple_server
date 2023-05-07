@@ -45,7 +45,7 @@ async function tickMethod() {
         // テキスト内容が変更になっている時だけ
         if (isChange && Length < realtimemode_max_textlength) {
             browserpanecommand({
-                target: "_each",
+                target: target_browser_pane,
                 url: `javascript:updateFetch(${port})`,
                 show: 1
             });
@@ -66,7 +66,7 @@ async function tickMethod() {
             let isUpdate = isFileLastModifyUpdated();
             if (isUpdate && Length >= realtimemode_max_textlength - 1000) { // -1000しているのはギリギリ被らないようにするのではなく、LiveViewとFileViewで余裕をもたせる(境界で行ったり来たりしないように)
                 browserpanecommand({
-                    target: "_each",
+                    target: target_browser_pane,
                     url: "javascript:location.reload()",
                     show: 1
                 });
