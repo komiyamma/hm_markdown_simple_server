@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.0.3
+ * HmMarkdownSimpleServer v1.2.0.4
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -11,7 +11,10 @@ const target_browser_pane = "_each";
 const absolute_uri = getVar("$ABSOLUTE_URI");
 // ポート番号
 const port = getVar("#PORT");
+// リアルタイムモードの最大文字数
 const realtimemode_max_textlength = getVar('#REALTIME_MODE_TEXT_LENGTH_MAX');
+// カーソルにブラウザ枠が追従するモード
+const cursor_follow_mode = getVar('#CURSOR_FOLLOW_MODE');
 // 時間を跨いで共通利用するので、varで
 if (typeof (timerHandle) === "undefined") {
     var timerHandle = 0;
@@ -110,10 +113,17 @@ async function tickMethod() {
                 });
             }
             // perYが1以上なら、ブラウザは末尾へ
-            if (perY >= 1) {
+            else if (perY >= 1) {
                 browserpanecommand({
                     target: target_browser_pane,
                     url: "javascript:scollToPageEnd();"
+                });
+            }
+            // それ以外なら、現在の位置を計算して移動する。
+            else if (cursor_follow_mode == 1) {
+                browserpanecommand({
+                    target: target_browser_pane,
+                    url: "javascript:scollToPagePos(" + (getCurCursorYPos() + 1) + ");"
                 });
             }
         }

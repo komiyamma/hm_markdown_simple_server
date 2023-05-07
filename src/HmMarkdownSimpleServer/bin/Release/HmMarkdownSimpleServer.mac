@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.3
+ * HmMarkdownSimpleServer v1.2.0.4
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -8,6 +8,8 @@
 SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
     #REALTIME_MODE_TEXT_LENGTH_MAX = 50000; // 50000文字まではリアルタイムでブラウザ枠追従モードを維持する。それを超えるとファイル保存時のみの更新。
+
+    #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
 
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
@@ -26,6 +28,7 @@ RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
             releaseobject(#LAST_MARKDOWN_SERVER_COM); // HmMarkdownSimpleServer.HmMarkdownSimpleServer 内の「OnReleaseObject」も実行される。
         }
     }
+
 
 RELEASE_OLD_FETCH_SERVER_OBJECT:
 
@@ -81,6 +84,20 @@ MAKE_HTML_TEMPLATE:
     </head>
     <body class="markdown-body">
     <script>
+    function scollToPagePos(pos_lineno) {
+        try {
+            if (pos_lineno <= 1) {
+                return;
+            }
+            let pragma_line_id = "pragma-line-" + pos_lineno;
+
+            let elem = document.getElementById(pragma_line_id);
+            if (elem) {
+                elem.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" });
+            }
+        } catch(e) {
+        }
+    }
     function scollToPageBgn() {
         javascript:window.scrollTo(0, 0);
     }
@@ -158,6 +175,7 @@ FIND_MARKDOWN_FETCH_SERVER_AVILABLE_PORT:
 
     setstaticvariable "HmMarkdownFetchServerLastPort", str(#MARKDOWN_HOSTPORT), 1;
 
+
 LAUNCH_MARKDOWN_FETCH_SERVER:
 
     #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
@@ -169,5 +187,6 @@ LAUNCH_MARKDOWN_FETCH_SERVER:
 
 
 WEBVIEW2_ASYNC:
+
     jsmode "WebView2\\HmMarkdownSimpleServer";
     execjs currentmacrodirectory + @"\HmMarkdownSimpleServerAsync.js";

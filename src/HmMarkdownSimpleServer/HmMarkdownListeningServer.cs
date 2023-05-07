@@ -71,7 +71,7 @@ public class HmMarkdownListeningServer
         try
         {
             string markdown = Hm.Edit.TotalText ?? "";
-            var pipeLine = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().Build();
+            var pipeLine = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
             string html = Markdig.Markdown.ToHtml(markdown, pipeLine);
             return html;
         }
