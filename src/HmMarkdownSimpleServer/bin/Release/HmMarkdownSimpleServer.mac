@@ -139,7 +139,7 @@ LAUNCH_MARKDOWN_SERVER:
     $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", $HTML_TEMPLATE);
 
 
-CREATE_FETCH_SERVER_OBJECT:
+CREATE_MARKDOWN_FETCH_SERVER_OBJECT:
 
     #FETCH_SERVER = createobject(currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownListeningServer");
 
@@ -190,7 +190,7 @@ LAUNCH_MARKDOWN_FETCH_SERVER:
     }
 
 
-WEBVIEW2_ASYNC:
+EXECUTE_MARKDOWN_SERVER_JS_ASYNC:
 
     jsmode "WebView2\\HmMarkdownSimpleServer";
     execjs currentmacrodirectory + @"\HmMarkdownSimpleServerAsync.js";
