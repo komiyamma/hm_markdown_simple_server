@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.4
+ * HmMarkdownSimpleServer v1.2.0.5
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -102,7 +102,10 @@ MAKE_HTML_TEMPLATE:
         javascript:window.scrollTo(0, 0);
     }
     function scollToPageEnd() {
-        javascript:window.scrollTo(0, (document.body.scrollHeight)*(100));
+        let elem = document.getElementById("hm-pragma-line-end");
+        if (elem) {
+            elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
+        }
     }
     function updateFetch(port) {
         try {
@@ -124,6 +127,7 @@ MAKE_HTML_TEMPLATE:
     </script>
     <div id="update_panel">$HTML</div>
     <br>
+    <div id="hm-pragma-line-end"></div>
     </body>
     </html>
     """""""""""""""""""""""""""""""""""""""";
