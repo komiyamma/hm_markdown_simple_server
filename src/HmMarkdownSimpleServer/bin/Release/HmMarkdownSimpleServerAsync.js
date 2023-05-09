@@ -52,7 +52,7 @@ async function tickMethod() {
                 url: `javascript:updateFetch(${port})`,
                 show: 1
             });
-            // コマンド実行したので、interactive か complete になるまで待つ
+            // コマンド実行したので、complete になるまで待つ
             // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
             for (let i = 0; i < 3; i++) {
                 await sleep_in_tick(200);
@@ -73,7 +73,7 @@ async function tickMethod() {
                     url: "javascript:location.reload()",
                     show: 1
                 });
-                // コマンド実行したので、interactive か complete になるまで待つ
+                // コマンド実行したので、loadが完了するまで待つ
                 // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
                 for (let i = 0; i < 3; i++) {
                     await sleep_in_tick(200);
@@ -149,7 +149,7 @@ function isNotDetectedOperation() {
     ○ 0x00004000 中ボタンによるオートスクロール中
     ○ 0x00008000 キーやマウスの操作直後
     ○ 0x00010000 何かマウスのボタンを押している
-    ○ 0x00020000 マウスキャプチャ状態(ドラッグ状態)
+    × 0x00020000 マウスキャプチャ状態(ドラッグ状態)
     ○ 0x00040000 Hidemaru_CheckQueueStatus相当
     */
     let istatus = hidemaru.getInputStates();
