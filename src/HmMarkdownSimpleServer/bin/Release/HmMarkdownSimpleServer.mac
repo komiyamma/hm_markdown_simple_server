@@ -99,7 +99,7 @@ MAKE_HTML_TEMPLATE:
         }
     }
     function scollToPageBgn() {
-        javascript:window.scrollTo(0, 0);
+        scrollTo(0, 0);
     }
     function scollToPageEnd() {
         let elem = document.getElementById("hm-pragma-line-end");
@@ -185,6 +185,7 @@ LAUNCH_MARKDOWN_FETCH_SERVER:
     #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
 
     if (#PORT == 0) {
+        message("ポート番号に空きがありません。\n#BGN_PORT と #END_PORT の範囲を広げて下さい。");
         // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
         endmacro;
     }
