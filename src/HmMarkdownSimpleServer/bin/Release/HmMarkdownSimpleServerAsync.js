@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.0.4
+ * HmMarkdownSimpleServer v1.2.0.5
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -90,7 +90,7 @@ async function tickMethod() {
         // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
         let [isDiff, posY, allLineCount] = getChangeYPos();
         // Zero Division Error回避
-        if (allLineCount < 0) {
+        if (allLineCount <= 0) {
             allLineCount = 1;
         }
         // 何か変化が起きていて、かつ、linenoが1以上
