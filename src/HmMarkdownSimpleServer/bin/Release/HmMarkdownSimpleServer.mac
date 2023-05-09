@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.5
+ * HmMarkdownSimpleServer v1.2.0.6
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -99,12 +99,18 @@ MAKE_HTML_TEMPLATE:
         }
     }
     function scollToPageBgn() {
-        scrollTo(0, 0);
+        try {
+            scrollTo(0, 0);
+        } catch(e) {
+        }
     }
     function scollToPageEnd() {
-        let elem = document.getElementById("hm-pragma-line-end");
-        if (elem) {
-            elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
+        try {
+            let elem = document.getElementById("hm-pragma-line-end");
+            if (elem) {
+                elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
+            }
+        } catch(e) {
         }
     }
     function updateFetch(port) {
@@ -121,7 +127,6 @@ MAKE_HTML_TEMPLATE:
             .catch(error => {
             });
         } catch(e) {
-
         }
     }
     </script>
