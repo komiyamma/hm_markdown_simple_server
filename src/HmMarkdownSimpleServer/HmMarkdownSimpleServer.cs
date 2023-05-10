@@ -250,6 +250,7 @@ public class HmMarkdownSimpleServer
             } else
             {
                 html = html.Replace("$MATHJAX_URL", "");
+                html = html.Replace("$MATHJAX_CONFIG", "");
                 html = html.Replace("$IS_USE_MATHJAX", "0");
             }
             File.WriteAllText(tempFileFullPath, html);
