@@ -245,6 +245,7 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$HTML", markdown_html);
             if (is_use_math_jax > 0) {
                 html = html.Replace("$MATHJAX_URL", """<script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>""");
+                html = html.Replace("$MATHJAX_CONFIG", """<script type="text/x-mathjax-config">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
                 html = html.Replace("$IS_USE_MATHJAX", "1");
             } else
             {

@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.1.1
+ * HmMarkdownSimpleServer v1.2.1.2
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -13,7 +13,7 @@ SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
     #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
 
-    #IS_USE_MATHJAX = 0;     // MathJax を使うかどうか。
+    #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
 
@@ -87,6 +87,7 @@ MAKE_HTML_TEMPLATE:
     $MATHJAX_URL
     </head>
     <body class="markdown-body">
+    $MATHJAX_CONFIG
     <script>
     function scollToPagePos(pos_lineno) {
         try {
