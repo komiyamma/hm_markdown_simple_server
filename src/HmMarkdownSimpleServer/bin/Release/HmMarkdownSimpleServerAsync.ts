@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.0.7
+ * HmMarkdownSimpleServer v1.2.0.8
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -153,7 +153,7 @@ async function tickMethod(): Promise<void> {
             else if (cursor_follow_mode == 1) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPagePos(" + (getCurCursorYPos()+1) + ");"
+                    url: "javascript:scollToPagePos(" + (getCurCursorYPos()-1) + ");"
                 });
             }
         }
