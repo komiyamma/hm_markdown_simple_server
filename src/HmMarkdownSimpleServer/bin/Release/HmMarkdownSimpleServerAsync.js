@@ -67,7 +67,7 @@ async function tickMethod() {
         }
         else {
             let isUpdate = isFileLastModifyUpdated();
-            if (isUpdate && Length >= realtimemode_max_textlength - 1000) { // -1000しているのはギリギリ被らないようにするのではなく、LiveViewとFileViewで余裕をもたせる(境界で行ったり来たりしないように)
+            if (isUpdate && Length >= realtimemode_max_textlength - 1000) { // -1000しているのはギリギリ被らないようにするのではなく、リアルタイムプレビューとライブプレビューで余裕をもたせる(境界で行ったり来たりしないように)
                 browserpanecommand({
                     target: target_browser_pane,
                     url: "javascript:location.reload()",
