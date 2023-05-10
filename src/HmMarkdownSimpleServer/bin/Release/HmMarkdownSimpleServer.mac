@@ -15,6 +15,7 @@ SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
+
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
 
     // 「この秀丸プロセス」内でのオブジェクト番号を取り出す
