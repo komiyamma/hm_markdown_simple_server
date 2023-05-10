@@ -7,6 +7,7 @@
 
 hidemaruversion "9.22.14";
 
+
 SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
     #REALTIME_MODE_TEXT_LENGTH_MAX = 50000; // 50000文字まではリアルタイムでブラウザ枠追従モードを維持する。それを超えるとファイル保存時のみの更新。
