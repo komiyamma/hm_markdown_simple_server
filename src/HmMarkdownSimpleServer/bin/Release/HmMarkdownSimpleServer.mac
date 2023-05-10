@@ -1,9 +1,11 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.6
+ * HmMarkdownSimpleServer v1.2.0.7
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
  */
+
+hidemaruversion "9.22.14";
 
 SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
