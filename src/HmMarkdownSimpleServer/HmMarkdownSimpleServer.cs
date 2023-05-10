@@ -34,6 +34,8 @@ public class HmMarkdownSimpleServer
 
     string html_template = "";
 
+    int is_use_math_jax = 0;
+
     // Markdon処理のスタート
     public string Launch(string htmlTemplate)
     {
@@ -47,6 +49,7 @@ public class HmMarkdownSimpleServer
 
             currMacroFilePath = (String)Hm.Macro.Var["currentmacrofilename"];
             darkmode = (int)(dynamic)Hm.Macro.Var["darkmode"];
+            is_use_math_jax = (int)(dynamic)Hm.Macro.Var["#IS_USE_MATHJAX"];
 
             string tempFileFullPath = GetTemporaryFileName();
             prevFileFullPath = Hm.Edit.FilePath ?? "";
@@ -240,6 +243,14 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$CSS_URI_ABSOLUTE", cssHref);
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
+            if (is_use_math_jax > 0) {
+                html = html.Replace("$MATHJAX_URL", """<script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>""");
+                html = html.Replace("$IS_USE_MATHJAX", "1");
+            } else
+            {
+                html = html.Replace("$MATHJAX_URL", "");
+                html = html.Replace("$IS_USE_MATHJAX", "0");
+            }
             File.WriteAllText(tempFileFullPath, html);
         }
         catch (Exception) { }

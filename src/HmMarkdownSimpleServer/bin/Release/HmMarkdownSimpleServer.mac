@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.0.8
+ * HmMarkdownSimpleServer v1.2.1.1
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -13,6 +13,7 @@ SET_REALTIME_MODE_TEXT_LENGTH_MAX:
 
     #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
 
+    #IS_USE_MATHJAX = 0;     // MathJax を使うかどうか。
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
 
@@ -83,6 +84,7 @@ MAKE_HTML_TEMPLATE:
     <meta charset="UTF-8">
     <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
     <base href="$BASE_HREF">
+    $MATHJAX_URL
     </head>
     <body class="markdown-body">
     <script>
@@ -124,6 +126,10 @@ MAKE_HTML_TEMPLATE:
                 let new_html = data.toString();
                 if (panel.innerHTML != new_html) {
                     panel.innerHTML = new_html;
+                    if ($IS_USE_MATHJAX) {
+                        let math = document.getElementsByClassName("math");
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
+                    }
                 }
             })
             .catch(error => {
