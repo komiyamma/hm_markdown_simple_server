@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.1
+ * HmMarkdownSimpleServer v1.2.1.3
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -88,15 +88,15 @@ async function tickMethod(): Promise<void> {
                 browserpanecommand(
                     {
                         target: target_browser_pane,
-                        url: "javascript:location.reload()",
-                        show: 1
+                        show: 1,
+                        refresh: 1
                     }
                 );
 
                 // コマンド実行したので、loadが完了するまで待つ
                 // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
-                for (let i = 0; i < 3; i++) {
-                    await sleep_in_tick(200);
+                for (let i = 0; i < 6; i++) {
+                    await sleep_in_tick(100);
                     let status = browserpanecommand({
                         target: target_browser_pane,
                         get: "load"
