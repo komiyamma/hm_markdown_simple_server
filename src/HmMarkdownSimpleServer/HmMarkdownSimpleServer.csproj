@@ -34,7 +34,6 @@
   <ItemGroup>
     <Reference Include="Markdig, Version=0.18.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Markdig.0.18.1\lib\net40\Markdig.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
