@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.3
+ * HmMarkdownSimpleServer v1.2.1.4
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -49,7 +49,7 @@ async function tickMethod() {
         if (isChange && Length < realtimemode_max_textlength) {
             browserpanecommand({
                 target: target_browser_pane,
-                url: `javascript:updateFetch(${port})`,
+                url: `javascript:HmMarkdownSimpleServer_updateFetch(${port})`,
                 show: 1
             });
             // コマンド実行したので、complete になるまで待つ
@@ -109,21 +109,21 @@ async function tickMethod() {
             if (perY <= 0) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPageBgn();"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
                 });
             }
             // perYが1以上なら、ブラウザは末尾へ
             else if (perY >= 1) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPageEnd();"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
                 });
             }
             // それ以外なら、現在の位置を計算して移動する。
             else if (cursor_follow_mode == 1) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPagePos(" + (getCurCursorYPos() - 1) + ");"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (getCurCursorYPos() - 1) + ");"
                 });
             }
         }

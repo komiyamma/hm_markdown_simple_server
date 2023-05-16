@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.3
+ * HmMarkdownSimpleServer v1.2.1.4
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -62,7 +62,7 @@ async function tickMethod(): Promise<void> {
             browserpanecommand(
                 {
                     target: target_browser_pane,
-                    url: `javascript:updateFetch(${port})`,
+                    url: `javascript:HmMarkdownSimpleServer_updateFetch(${port})`,
                     show: 1
                 }
             );
@@ -137,7 +137,7 @@ async function tickMethod(): Promise<void> {
             if (perY <= 0) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPageBgn();"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
                 });
             }
 
@@ -145,7 +145,7 @@ async function tickMethod(): Promise<void> {
             else if (perY >= 1) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPageEnd();"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
                 });
             }
 
@@ -153,7 +153,7 @@ async function tickMethod(): Promise<void> {
             else if (cursor_follow_mode == 1) {
                 browserpanecommand({
                     target: target_browser_pane,
-                    url: "javascript:scollToPagePos(" + (getCurCursorYPos()-1) + ");"
+                    url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (getCurCursorYPos()-1) + ");"
                 });
             }
         }
