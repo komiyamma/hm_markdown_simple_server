@@ -380,7 +380,6 @@ async function initAsync() {
     // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
     // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
     for (let i = 0; i < 20; i++) {
-        console.log(i + "\r\n");
         let status = browserpanecommand({
             target: target_browser_pane,
             get: "load"
