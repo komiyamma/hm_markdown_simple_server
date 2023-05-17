@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.5
+ * HmMarkdownSimpleServer v1.2.1.6
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -369,16 +369,18 @@ initVariable();
 stopIntervalTick(timerHandle);
 async function initAsync() {
     // 表示
+    /*
     browserpanecommand({
         target: target_browser_pane,
         url: absolute_url,
         show: 1
     });
+    */
     // コマンド実行したので、loadが完了するまで待つ
     // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
     // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
     for (let i = 0; i < 20; i++) {
-        await sleep_in_tick(100);
+        console.log(i + "\r\n");
         let status = browserpanecommand({
             target: target_browser_pane,
             get: "load"
@@ -386,6 +388,7 @@ async function initAsync() {
         if (status == "1") {
             break;
         }
+        await sleep_in_tick(100);
     }
     // １回走らせる
     tickMethod();

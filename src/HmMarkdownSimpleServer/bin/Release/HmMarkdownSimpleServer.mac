@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.1.5
+ * HmMarkdownSimpleServer v1.2.1.6
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -205,6 +205,13 @@ LAUNCH_MARKDOWN_FETCH_SERVER:
         // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
         endmacro;
     }
+
+
+// この段階で先に表示しておくとかなり速い
+SHOW_BROWSERPANE_URL:
+
+    showbrowserpane 1, "_each";
+    setbrowserpaneurl $ABSOLUTE_URI, "_each";
 
 
 EXECUTE_MARKDOWN_SERVER_JS_ASYNC:
