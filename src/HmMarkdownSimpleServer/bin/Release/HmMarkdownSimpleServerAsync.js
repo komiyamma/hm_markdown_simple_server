@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.4
+ * HmMarkdownSimpleServer v1.2.1.5
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -8,7 +8,8 @@
 // ブラウザペインのターゲット。個別枠。
 const target_browser_pane = "_each";
 // 表示するべき一時ファイルのURL
-const absolute_uri = getVar("$ABSOLUTE_URI");
+const absolute_path = getVar("$ABSOLUTE_URI");
+const absolute_url = new URL(absolute_path).href;
 // ポート番号
 const port = getVar("#PORT");
 // リアルタイムモードの最大文字数
@@ -42,6 +43,15 @@ async function tickMethod() {
         }
         // この操作対象中は、javascriptによる更新しない。何が起こるかわからん
         if (isNotDetectedOperation()) {
+            return;
+        }
+        let current_url = browserpanecommand({
+            get: "url",
+            target: target_browser_pane
+        });
+        // uriが想定のものを違っていたら、何もしない
+        // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
+        if (!current_url.includes(absolute_url)) {
             return;
         }
         let [isChange, Length] = getTotalTextChange();
@@ -86,6 +96,16 @@ async function tickMethod() {
                     }
                 }
             }
+        }
+        // uriが想定のものを違っていたら、何もしない
+        current_url = browserpanecommand({
+            get: "url",
+            target: target_browser_pane
+        });
+        // uriが想定のものを違っていたら、何もしない
+        // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
+        if (!current_url.includes(absolute_url)) {
+            return;
         }
         // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
         let [isDiff, posY, allLineCount] = getChangeYPos();
@@ -317,7 +337,7 @@ function isFileLastModifyUpdated() {
     if (filepath != "") {
         try {
             // 編集しているファイルではなく、Tempファイルの方のファイルが更新されてるかが重要。
-            let f = fso.GetFile(absolute_uri);
+            let f = fso.GetFile(absolute_path);
             let m = f.DateLastModified;
             let s = f.Size;
             if (m != lastFileModified) {
@@ -344,17 +364,33 @@ function initVariable() {
     lastFileModified = 0;
     fso = null;
 }
-// 表示
-browserpanecommand({
-    target: target_browser_pane,
-    url: absolute_uri,
-    show: 1
-});
 // 初期化
 initVariable();
 // 前回のが残っているかもしれないので、止める
 stopIntervalTick(timerHandle);
-// １回走らせる
-tickMethod();
-// Tick実行
-timerHandle = createIntervalTick(tickMethod);
+async function initAsync() {
+    // 表示
+    browserpanecommand({
+        target: target_browser_pane,
+        url: absolute_url,
+        show: 1
+    });
+    // コマンド実行したので、loadが完了するまで待つ
+    // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
+    // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
+    for (let i = 0; i < 20; i++) {
+        await sleep_in_tick(100);
+        let status = browserpanecommand({
+            target: target_browser_pane,
+            get: "load"
+        });
+        if (status == "1") {
+            break;
+        }
+    }
+    // １回走らせる
+    tickMethod();
+    // Tick作成 (１秒間隔で実行)
+    timerHandle = createIntervalTick(tickMethod);
+}
+initAsync();
