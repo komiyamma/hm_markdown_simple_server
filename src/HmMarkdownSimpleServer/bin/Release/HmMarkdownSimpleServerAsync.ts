@@ -66,7 +66,6 @@ async function tickMethod(): Promise<void> {
                           ) ;
 
         // uriが想定のものを違っていたら、何もしない
-        // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
         if (!current_url.includes(absolute_url)) {
             return;
         }
