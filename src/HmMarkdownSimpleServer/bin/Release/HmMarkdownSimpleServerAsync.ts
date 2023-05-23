@@ -1,13 +1,13 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.1.6
+ * HmMarkdownSimpleServer v1.2.1.7
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
  */
 
 // ブラウザペインのターゲット。個別枠。
-const target_browser_pane: "_each" = "_each";
+const target_browser_pane: IBrowserPaneTargetString = getVar('$TARGET_BROWSER_PANE') as IBrowserPaneTargetString;
 
 // 表示するべき一時ファイルのURL
 const absolute_path: string = getVar("$ABSOLUTE_URI") as string;

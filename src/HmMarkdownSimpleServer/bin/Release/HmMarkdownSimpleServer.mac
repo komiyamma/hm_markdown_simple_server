@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.1.6
+ * HmMarkdownSimpleServer v1.2.1.7
  *
  * Copyright (c) 2023 Akitsugu Komiyama
  * under the MIT License
@@ -210,8 +210,9 @@ LAUNCH_MARKDOWN_FETCH_SERVER:
 // この段階で先に表示しておくとかなり速い
 SHOW_BROWSERPANE_URL:
 
-    showbrowserpane 1, "_each";
-    setbrowserpaneurl $ABSOLUTE_URI, "_each";
+    $TARGET_BROWSER_PANE = "_each";
+    showbrowserpane 1, $TARGET_BROWSER_PANE;
+    setbrowserpaneurl $ABSOLUTE_URI, $TARGET_BROWSER_PANE;
 
 
 EXECUTE_MARKDOWN_SERVER_JS_ASYNC:
