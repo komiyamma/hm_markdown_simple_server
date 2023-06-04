@@ -230,6 +230,7 @@ function isNotDetectedOperation() {
     if (s & 0x00000200) { return true; }
     if (s & 0x00000400) { return true; }
     if (s & 0x00000800) { return true; }
+    if (s & 0x00001000) { return true; }
     if (s & 0x00020000) { return true; }
     return false;
 }

@@ -199,6 +199,9 @@ function isNotDetectedOperation() {
     if (s & 0x00000800) {
         return true;
     }
+    if (s & 0x00001000) {
+        return true;
+    }
     if (s & 0x00020000) {
         return true;
     }
