@@ -2748,11 +2748,11 @@ namespace HmNetCOM
                     {
                         if (IntPtr.Size == 4)
                         {
-                            return (Int32)ret + 0; // 確実に複製を
+                            return (Int32)(dynamic)ret + 0; // 確実に複製を
                         }
                         else
                         {
-                            return (Int64)ret + 0; // 確実に複製を
+                            return (Int64)(dynamic)ret + 0; // 確実に複製を
                         }
                     }
                     else
