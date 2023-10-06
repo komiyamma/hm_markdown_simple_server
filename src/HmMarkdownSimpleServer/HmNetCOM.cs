@@ -1,6 +1,6 @@
 /*
- * HmNetCOM ver 2.082
- * Copyright (C) 2021-2022 Akitsugu Komiyama
+ * HmNetCOM ver 2.083
+ * Copyright (C) 2021-2023 Akitsugu Komiyama
  * under the MIT License
  **/
 
@@ -2732,10 +2732,18 @@ namespace HmNetCOM
                     {
                         if (IntPtr.Size == 4)
                         {
+                            try {
+                                return (Int32)ret + 0;
+                            } catch(Exception) {
+                            }
                             return (Int32)(dynamic)ret + 0; // ämé¿Ç…ï°êªÇ
                         }
                         else
                         {
+                            try {
+                                return (Int64)ret + 0;
+                            } catch(Exception) {
+                            }
                             return (Int64)(dynamic)ret + 0; // ämé¿Ç…ï°êªÇ
                         }
                     }
