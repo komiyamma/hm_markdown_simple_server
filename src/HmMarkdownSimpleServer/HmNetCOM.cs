@@ -1050,6 +1050,7 @@ namespace HmNetCOM
                 HmMacroCOMVar.SetMacroVar(text);
                 string cmd = $@"
                 begingroupundo;
+                rangeeditout;
                 selectall;
                 #_COM_NET_PINVOKE_MACRO_VAR = createobject(@""{myTargetDllFullPath}"", @""{myTargetClass}"" );
                 insert member(#_COM_NET_PINVOKE_MACRO_VAR, ""DllToMacro"" );
