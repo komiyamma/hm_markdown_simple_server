@@ -21,7 +21,7 @@ public class HmMarkdownSimpleServer
 {
     static DllAssemblyResolver dasmr;
 
-    Task<string> task;
+    Task<bool> task;
     CancellationTokenSource cts;
 
     System.IO.FileSystemWatcher watcher;
@@ -165,50 +165,66 @@ public class HmMarkdownSimpleServer
 
     // ファイル名が変化したことを検知したら、HmMarkdownSimpleServer.mac(自分の呼び出し元)を改めて実行する。
     // これによりマクロにより、このクラスのインスタンスがクリアされるとともに、新たなファイル名を使って、Markdownを新たなファイルに紐づけで表示されることになる。
-    private async Task<string> TickMethodAsync(CancellationToken ct)
+    private async Task<bool> TickMethodAsync(CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
-
-        while (true)
+        try
         {
-            for (int i = 0; i < 3; i++)
+            while (!ct.IsCancellationRequested)
             {
-                await DelayMethod(ct);
-            }
-
-            string currFileFullPath = Hm.Edit.FilePath;
-
-            if (String.IsNullOrEmpty(currFileFullPath))
-            {
-                Destroy();
-            }
-
-            // ファイル名が変化したら、改めて自分自身のマクロを実行する。
-            if (prevFileFullPath != currFileFullPath)
-            {
-                prevFileFullPath = currFileFullPath;
-
-                // 同期マクロ実行中ではない
-                if (!Hm.Macro.IsExecuting && !String.IsNullOrEmpty(currFileFullPath))
+                for (int i = 0; i < 3; i++)
                 {
-                    isMustReflesh = false;
-
-                    // 自分自身を実行
-                    Hm.Macro.Exec.File(currMacroFilePath);
+                    if (ct.IsCancellationRequested)
+                    {
+                        return true;
+                    }
+                    await DelayMethod(ct);
                 }
-            }
 
-            if (isMustReflesh)
-            {
-                // 同期マクロ実行中ではない
-                if (!String.IsNullOrEmpty(currFileFullPath))
+                string currFileFullPath = Hm.Edit.FilePath;
+
+                if (String.IsNullOrEmpty(currFileFullPath))
                 {
-                    CreateTempFile(currFileFullPath);
-
                     isMustReflesh = false;
+
+                    Destroy();
+
+                    return true;
+                }
+
+                // ファイル名が変化したら、改めて自分自身のマクロを実行する。
+                if (prevFileFullPath != currFileFullPath)
+                {
+                    prevFileFullPath = currFileFullPath;
+
+                    // 同期マクロ実行中ではない
+                    if (!Hm.Macro.IsExecuting && !String.IsNullOrEmpty(currFileFullPath))
+                    {
+                        isMustReflesh = false;
+
+                        // 自分自身を実行
+                        Hm.Macro.Exec.File(currMacroFilePath);
+
+                        return true;
+                    }
+                }
+
+                if (isMustReflesh)
+                {
+                    // 同期マクロ実行中ではない
+                    if (!String.IsNullOrEmpty(currFileFullPath))
+                    {
+                        CreateTempFile(currFileFullPath);
+
+                        isMustReflesh = false;
+                    }
                 }
             }
         }
+        catch (Exception e)
+        {
+        }
+        return true;
+
     }
 
     private void CreateTempFile(string currFileFullPath)
@@ -243,11 +259,13 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$CSS_URI_ABSOLUTE", cssHref);
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
-            if (is_use_math_jax > 0) {
+            if (is_use_math_jax > 0)
+            {
                 html = html.Replace("$MATHJAX_URL", """<script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>""");
                 html = html.Replace("$MATHJAX_CONFIG", """<script type="text/x-mathjax-config">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
                 html = html.Replace("$IS_USE_MATHJAX", "1");
-            } else
+            }
+            else
             {
                 html = html.Replace("$MATHJAX_URL", "");
                 html = html.Replace("$MATHJAX_CONFIG", "");
@@ -260,7 +278,7 @@ public class HmMarkdownSimpleServer
 
     private static async Task<CancellationToken> DelayMethod(CancellationToken ct)
     {
-        await Task.Delay(150);
+        await Task.Delay(150, ct);
         if (ct.IsCancellationRequested)
         {
             // Clean up here, then...
@@ -299,6 +317,17 @@ public class HmMarkdownSimpleServer
         }
         try
         {
+            if (task != null)
+            {
+                task.Dispose();
+            }
+        }
+        catch (Exception)
+        {
+
+        }
+        try
+        {
             foreach (var item in dic)
             {
                 try
@@ -308,8 +337,6 @@ public class HmMarkdownSimpleServer
                 catch { }
             }
             dic.Clear();
-
-            return 1;
         }
         catch (Exception)
         {
