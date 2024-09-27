@@ -1,11 +1,14 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.2.1
+ * HmMarkdownSimpleServer v1.2.2.2
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
  */
 
 hidemaruversion "9.22.17";
+
+
+setcompatiblemode 0x08000000; // マクロ内変数を他と共用しない。
 
 
 SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
