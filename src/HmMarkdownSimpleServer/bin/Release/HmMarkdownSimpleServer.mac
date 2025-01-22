@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.2
+ * HmMarkdownSimpleServer v1.2.4.3
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -118,14 +118,27 @@ MAKE_HTML_TEMPLATE:
                         event.preventDefault();  // ページの遷移を防ぎ、
                         // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
                         const link_id = href.replace("#", "");
+                        // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
                         let elem = document.getElementById(link_id);
                         if (elem) {
                             elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
                         } else {
+                            // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
                             let link_decode = decodeURIComponent(link_id);
                             let elem_decode = document.getElementById(link_decode);
                             if (elem_decode) {
                                 elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                            }
+
+                            else {
+                                // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
+                                const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                                headers.forEach(header => {
+                                    const textContent = header.textContent; // ぶっちゃけこのようなジャンプはMarkdown的には保証の限りではない。
+                                    if (link_decode === textContent) {
+                                        header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                                    }
+                                });
                             }
                         }
                     }
