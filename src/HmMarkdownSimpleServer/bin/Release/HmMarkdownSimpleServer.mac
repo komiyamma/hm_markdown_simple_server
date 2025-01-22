@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.3.2
+ * HmMarkdownSimpleServer v1.2.4.2
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -19,7 +19,7 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
-    #IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK = 0;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
+    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 0;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
 
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
@@ -96,10 +96,14 @@ MAKE_HTML_TEMPLATE:
     <body class="markdown-body">
     $MATHJAX_CONFIG
     <script>
-
     document.addEventListener('DOMContentLoaded', () => {
         HmMarkdownSimpleServer_updateAHrefTarget();
     });
+
+    function HmMarkdownSimpleServer_openUrlByExternalBrowser(url) {
+        window.chrome.webview.postMessage({ funcid: callFuncId, message: url });
+    }
+
 
     function HmMarkdownSimpleServer_updateAHrefTarget() {
         const links = document.querySelectorAll('a');
@@ -107,25 +111,38 @@ MAKE_HTML_TEMPLATE:
         links.forEach(link => {
 
             const href = link.getAttribute('href');
-            if ($IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK) {
+            if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
                 if (href && href.startsWith('http')) {
                     link.setAttribute('target', '_blank');
                 }
             }
-            
-            /*
-            link.addEventListener('click', function(event) {
-              if (href && href.startsWith('#')) {
-                const link_id = href.replace("#", "");
-                event.preventDefault();  // ページの遷移を防ぎ、自前で移動
-                let elem = document.getElementById(link_id);
-                if (elem) {
-                    elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                }
-              }
-            });
-            */
 
+            link.addEventListener('click', (event) => {
+                try {
+                    if (href && href.startsWith('#')) {
+                        event.preventDefault();  // ページの遷移を防ぎ、自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
+                        const link_id = href.replace("#", "");
+                        let elem = document.getElementById(link_id);
+                        if (elem) {
+                            elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                        } else {
+                            let link_decode = decodeURIComponent(link_id); // '+'をスペースに置換してからデコード
+                            let elem_decode = document.getElementById(link_decode);
+                            if (elem_decode) {
+                                elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                            }
+                        }
+                    }
+
+                    if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 2) {
+                        if (href && href.startsWith('http')) {
+                            link.setAttribute('target', '_blank');
+                        }
+                    }
+
+                } catch (e) {
+                }
+            });
         });
     };
 
@@ -140,13 +157,13 @@ MAKE_HTML_TEMPLATE:
             if (elem) {
                 elem.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" });
             }
-        } catch(e) {
+        } catch (e) {
         }
     }
     function HmMarkdownSimpleServer_scollToPageBgn() {
         try {
             scrollTo(0, 0);
-        } catch(e) {
+        } catch (e) {
         }
     }
     function HmMarkdownSimpleServer_scollToPageEnd() {
@@ -155,28 +172,28 @@ MAKE_HTML_TEMPLATE:
             if (elem) {
                 elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
             }
-        } catch(e) {
+        } catch (e) {
         }
     }
     function HmMarkdownSimpleServer_updateFetch(port) {
         try {
             fetch("http://localhost:" + port)
-            .then(response => response.text())
-            .then(data => {
-                let panel = document.getElementById("update_panel");
-                let new_html = data.toString();
-                if (panel.innerHTML != new_html) {
-                    panel.innerHTML = new_html;
-                    if ($IS_USE_MATHJAX) {
-                        let math = document.getElementsByClassName("math");
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
+                .then(response => response.text())
+                .then(data => {
+                    let panel = document.getElementById("update_panel");
+                    let new_html = data.toString();
+                    if (panel.innerHTML != new_html) {
+                        panel.innerHTML = new_html;
+                        if ($IS_USE_MATHJAX) {
+                            let math = document.getElementsByClassName("math");
+                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
+                        }
+                        HmMarkdownSimpleServer_updateAHrefTarget();
                     }
-                    HmMarkdownSimpleServer_updateAHrefTarget();
-                }
-            })
-            .catch(error => {
-            });
-        } catch(e) {
+                })
+                .catch(error => {
+                });
+        } catch (e) {
         }
     }
     </script>

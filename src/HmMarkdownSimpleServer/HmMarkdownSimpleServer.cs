@@ -6,6 +6,9 @@
 using HmNetCOM;
 using Markdig;
 using Markdig.Extensions.AutoIdentifiers;
+using Markdig.Renderers.Html;
+using Markdig.Renderers;
+using Markdig.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,9 +16,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 
 namespace HmMarkdownSimpleServer;
+
 
 [Guid("613BF59D-753E-4EEF-BFDE-BC621FDFDA60")]
 public class HmMarkdownSimpleServer
@@ -37,7 +42,7 @@ public class HmMarkdownSimpleServer
 
     int is_use_math_jax = 0;
 
-    int is_use_external_browser_for_external_link = 0;
+    int is_use_external_link_target_blank = 0;
 
     // Markdon処理のスタート
     public string Launch(string htmlTemplate)
@@ -53,7 +58,7 @@ public class HmMarkdownSimpleServer
             currMacroFilePath = (String)Hm.Macro.Var["currentmacrofilename"];
             darkmode = (int)(dynamic)Hm.Macro.Var["darkmode"];
             is_use_math_jax = (int)(dynamic)Hm.Macro.Var["#IS_USE_MATHJAX"];
-            is_use_external_browser_for_external_link = (int)(dynamic)Hm.Macro.Var["#IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK"];
+            is_use_external_link_target_blank = (int)(dynamic)Hm.Macro.Var["#IS_USE_EXTERNAL_LINK_TARGET_BLANK"];
 
             string tempFileFullPath = GetTemporaryFileName();
             prevFileFullPath = Hm.Edit.FilePath ?? "";
@@ -237,8 +242,20 @@ public class HmMarkdownSimpleServer
         {
             string markdowntext = File.ReadAllText(currFileFullPath);
 
-            var pipeLine = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.AutoLink).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            
+            /*
+            var document = Markdown.Parse(markdowntext, pipeLine);
+            var writer = new StringWriter();
+            var renderer = new CustomHtmlRenderer(writer);
+            renderer.Render(document);
 
+            writer.Flush(); // バッファリングされた内容を書き出す
+
+            string markdown_html = writer.ToString();
+            */
+            
+            
             string markdown_html = Markdig.Markdown.ToHtml(markdowntext, pipeLine);
             string tempFileFullPath = GetTemporaryFileName();
             string baseDirWin = Path.GetDirectoryName(currFileFullPath);
@@ -263,7 +280,7 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$CSS_URI_ABSOLUTE", cssHref);
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
-            html = html.Replace("$IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK", is_use_external_browser_for_external_link > 0 ? "1" : "0");
+            html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank > 0 ? "1" : "0");
 
             if (is_use_math_jax > 0)
             {
