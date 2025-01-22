@@ -44,6 +44,8 @@ public class HmMarkdownSimpleServer
 
     int is_use_external_link_target_blank = 0;
 
+    int funcid = 0;
+
     // Markdon処理のスタート
     public string Launch(string htmlTemplate)
     {
@@ -242,7 +244,7 @@ public class HmMarkdownSimpleServer
         {
             string markdowntext = File.ReadAllText(currFileFullPath);
 
-            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.AutoLink).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
             
             /*
             var document = Markdown.Parse(markdowntext, pipeLine);
@@ -280,7 +282,7 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$CSS_URI_ABSOLUTE", cssHref);
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
-            html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank > 0 ? "1" : "0");
+            html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank.ToString());
 
             if (is_use_math_jax > 0)
             {

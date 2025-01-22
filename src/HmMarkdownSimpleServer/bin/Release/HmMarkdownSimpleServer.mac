@@ -100,11 +100,6 @@ MAKE_HTML_TEMPLATE:
         HmMarkdownSimpleServer_updateAHrefTarget();
     });
 
-    function HmMarkdownSimpleServer_openUrlByExternalBrowser(url) {
-        window.chrome.webview.postMessage({ funcid: callFuncId, message: url });
-    }
-
-
     function HmMarkdownSimpleServer_updateAHrefTarget() {
         const links = document.querySelectorAll('a');
 
@@ -120,23 +115,18 @@ MAKE_HTML_TEMPLATE:
             link.addEventListener('click', (event) => {
                 try {
                     if (href && href.startsWith('#')) {
-                        event.preventDefault();  // ページの遷移を防ぎ、自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
+                        event.preventDefault();  // ページの遷移を防ぎ、
+                        // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
                         const link_id = href.replace("#", "");
                         let elem = document.getElementById(link_id);
                         if (elem) {
                             elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
                         } else {
-                            let link_decode = decodeURIComponent(link_id); // '+'をスペースに置換してからデコード
+                            let link_decode = decodeURIComponent(link_id);
                             let elem_decode = document.getElementById(link_decode);
                             if (elem_decode) {
                                 elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
                             }
-                        }
-                    }
-
-                    if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 2) {
-                        if (href && href.startsWith('http')) {
-                            link.setAttribute('target', '_blank');
                         }
                     }
 
