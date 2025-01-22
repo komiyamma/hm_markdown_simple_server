@@ -22,6 +22,9 @@ using System.Text.RegularExpressions;
 namespace HmMarkdownSimpleServer;
 
 
+
+
+
 [Guid("613BF59D-753E-4EEF-BFDE-BC621FDFDA60")]
 public class HmMarkdownSimpleServer
 {
@@ -245,18 +248,6 @@ public class HmMarkdownSimpleServer
             string markdowntext = File.ReadAllText(currFileFullPath);
 
             var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
-            
-            /*
-            var document = Markdown.Parse(markdowntext, pipeLine);
-            var writer = new StringWriter();
-            var renderer = new CustomHtmlRenderer(writer);
-            renderer.Render(document);
-
-            writer.Flush(); // バッファリングされた内容を書き出す
-
-            string markdown_html = writer.ToString();
-            */
-            
             
             string markdown_html = Markdig.Markdown.ToHtml(markdowntext, pipeLine);
             string tempFileFullPath = GetTemporaryFileName();
