@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.3
+ * HmMarkdownSimpleServer v1.2.4.4
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -82,10 +82,12 @@ CREATE_MARKDOWN_SERVER_OBJECT:
     setcomdetachmethod #MARKDOWN_SERVER_COM, "OnReleaseObject";
 
 
-MAKE_HTML_TEMPLATE:
 
-    $HTML_TEMPLATE =
-    """"""""""""""""""""""""""""""""""""""""
+LAUNCH_MARKDOWN_SERVER:
+
+    // 各種情報を基に、Markdownを簡易サーバーとして起動
+    $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", 
+    """""""""""""""""""""""""""""""""""""""""""""""""""""
     <html>
     <head>
     <meta charset="UTF-8">
@@ -205,13 +207,8 @@ MAKE_HTML_TEMPLATE:
     <div id="hm-pragma-line-end"></div>
     </body>
     </html>
-    """""""""""""""""""""""""""""""""""""""";
-
-
-LAUNCH_MARKDOWN_SERVER:
-
-    // 各種情報を基に、Markdownを簡易サーバーとして起動
-    $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", $HTML_TEMPLATE);
+    """""""""""""""""""""""""""""""""""""""""""""""""""""
+    );
 
 
 CREATE_MARKDOWN_FETCH_SERVER_OBJECT:
