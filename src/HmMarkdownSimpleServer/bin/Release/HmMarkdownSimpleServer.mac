@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.2.2
+ * HmMarkdownSimpleServer v1.2.3.1
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -18,6 +18,8 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
     #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
+
+    #IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK = 1;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
 
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
@@ -94,6 +96,39 @@ MAKE_HTML_TEMPLATE:
     <body class="markdown-body">
     $MATHJAX_CONFIG
     <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        HmMarkdownSimpleServer_updateAHrefTarget();
+    });
+
+    function HmMarkdownSimpleServer_updateAHrefTarget() {
+        const links = document.querySelectorAll('a');
+
+        links.forEach(link => {
+
+            const href = link.getAttribute('href');
+            if ($IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK) {
+                if (href && href.startsWith('http')) {
+                    link.setAttribute('target', '_blank');
+                }
+            }
+            
+            /*
+            link.addEventListener('click', function(event) {
+              if (href && href.startsWith('#')) {
+                const link_id = href.replace("#", "");
+                event.preventDefault();  // ページの遷移を防ぎ、自前で移動
+                let elem = document.getElementById(link_id);
+                if (elem) {
+                    elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                }
+              }
+            });
+            */
+
+        });
+    };
+
     function HmMarkdownSimpleServer_scollToPagePos(pos_lineno) {
         try {
             if (pos_lineno <= 1) {
@@ -136,6 +171,7 @@ MAKE_HTML_TEMPLATE:
                         let math = document.getElementsByClassName("math");
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
                     }
+                    HmMarkdownSimpleServer_updateAHrefTarget();
                 }
             })
             .catch(error => {
