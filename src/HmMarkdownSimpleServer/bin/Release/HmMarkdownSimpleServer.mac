@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.3.1
+ * HmMarkdownSimpleServer v1.2.3.2
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -19,7 +19,7 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
-    #IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK = 1;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
+    #IS_USE_EXTERNAL_BROWSER_FOR_EXTERNAL_LINK = 0;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
 
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
