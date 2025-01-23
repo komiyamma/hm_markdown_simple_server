@@ -19,7 +19,7 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
-    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 0;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
+    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 1;  // 外部リンクについては、ブラウザ枠の外部ブラウザを使用する。
 
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
@@ -102,52 +102,55 @@ LAUNCH_MARKDOWN_SERVER:
         HmMarkdownSimpleServer_updateAHrefTarget();
     });
 
+    function HmMarkdownSimpleServer_setCustomLink(link) {
+        const href = link.getAttribute('href');
+        if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
+            if (href && href.startsWith('http')) {
+                link.setAttribute('target', '_blank');
+            }
+        }
+
+        link.addEventListener('click', (event) => {
+            try {
+                if (href && href.startsWith('#')) {
+                    event.preventDefault();  // ページの遷移を防ぎ、
+                    // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
+                    const link_id = href.replace("#", "");
+                    // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
+                    let elem = document.getElementById(link_id);
+                    if (elem) {
+                        elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    } else {
+                        // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
+                        let link_decode = decodeURIComponent(link_id);
+                        let elem_decode = document.getElementById(link_decode);
+                        if (elem_decode) {
+                            elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                        }
+
+                        else {
+                            // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
+                            const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                            headers.forEach(header => {
+                                const textContent = header.textContent; // ぶっちゃけこのようなジャンプはMarkdown的には保証の限りではない。
+                                if (link_decode === textContent) {
+                                    header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                                }
+                            });
+                        }
+                    }
+                }
+
+            } catch (e) {
+            }
+        });
+    }
+
     function HmMarkdownSimpleServer_updateAHrefTarget() {
         const links = document.querySelectorAll('a');
 
         links.forEach(link => {
-
-            const href = link.getAttribute('href');
-            if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
-                if (href && href.startsWith('http')) {
-                    link.setAttribute('target', '_blank');
-                }
-            }
-
-            link.addEventListener('click', (event) => {
-                try {
-                    if (href && href.startsWith('#')) {
-                        event.preventDefault();  // ページの遷移を防ぎ、
-                        // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
-                        const link_id = href.replace("#", "");
-                        // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
-                        let elem = document.getElementById(link_id);
-                        if (elem) {
-                            elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                        } else {
-                            // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
-                            let link_decode = decodeURIComponent(link_id);
-                            let elem_decode = document.getElementById(link_decode);
-                            if (elem_decode) {
-                                elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                            }
-
-                            else {
-                                // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
-                                const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                                headers.forEach(header => {
-                                    const textContent = header.textContent; // ぶっちゃけこのようなジャンプはMarkdown的には保証の限りではない。
-                                    if (link_decode === textContent) {
-                                        header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                                    }
-                                });
-                            }
-                        }
-                    }
-
-                } catch (e) {
-                }
-            });
+            HmMarkdownSimpleServer_setCustomLink(link);
         });
     };
 
