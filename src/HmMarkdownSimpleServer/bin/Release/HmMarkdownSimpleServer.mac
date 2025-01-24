@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.4
+ * HmMarkdownSimpleServer v1.2.4.5
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -103,15 +103,14 @@ LAUNCH_MARKDOWN_SERVER:
     });
 
     function HmMarkdownSimpleServer_setCustomLink(link) {
-        const href = link.getAttribute('href');
-        if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
-            if (href && href.startsWith('http')) {
-                link.setAttribute('target', '_blank');
-            }
-        }
-
         link.addEventListener('click', (event) => {
             try {
+                const href = link.getAttribute('href');
+                if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1 && href && href.startsWith('http')) {
+                    event.preventDefault();
+                    window.open(href, '_blank');
+                
+                }
                 if (href && href.startsWith('#')) {
                     event.preventDefault();  // ページの遷移を防ぎ、
                     // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
