@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.5
+ * HmMarkdownSimpleServer v1.2.4.6
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -102,54 +102,55 @@ LAUNCH_MARKDOWN_SERVER:
         HmMarkdownSimpleServer_updateAHrefTarget();
     });
 
-    function HmMarkdownSimpleServer_setCustomLink(link) {
-        link.addEventListener('click', (event) => {
-            try {
-                const href = link.getAttribute('href');
-                if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1 && href && href.startsWith('http')) {
+    function HmMarkdownSimpleServer_setCustomLink(link, event) {
+        try {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('http')) {
+                if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
                     event.preventDefault();
                     window.open(href, '_blank');
-                
                 }
-                if (href && href.startsWith('#')) {
-                    event.preventDefault();  // ページの遷移を防ぎ、
-                    // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
-                    const link_id = href.replace("#", "");
-                    // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
-                    let elem = document.getElementById(link_id);
-                    if (elem) {
-                        elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                        return;
-                    }
-
-                    // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
-                    let link_decode = decodeURIComponent(link_id);
-                    let elem_decode = document.getElementById(link_decode);
-                    if (elem_decode) {
-                        elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                        return;
-                    }
-
-                    // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
-                    const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                    for (const header of headers) {
-                        if (link_decode === header.textContent) {
-                            header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
-                            break;
-                        }
-                    } 
-               }
-
-            } catch (e) {
             }
-        });
+            else if (href && href.startsWith('#')) {
+                event.preventDefault();  // ページの遷移を防ぎ、
+                // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
+                const link_id = href.replace("#", "");
+                // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
+                const elem = document.getElementById(link_id);
+                if (elem) {
+                    elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    return;
+                }
+
+                // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
+                const link_decode = decodeURIComponent(link_id);
+                const elem_decode = document.getElementById(link_decode);
+                if (elem_decode) {
+                    elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    return;
+                }
+
+                // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
+                const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                for (const header of headers) {
+                    if (link_decode === header.textContent) {
+                        header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                        break;
+                    }
+                } 
+            }
+
+        } catch (e) {
+        }
     }
 
     function HmMarkdownSimpleServer_updateAHrefTarget() {
         const links = document.querySelectorAll('a');
 
         links.forEach(link => {
-            HmMarkdownSimpleServer_setCustomLink(link);
+            link.addEventListener('click', event => {
+                HmMarkdownSimpleServer_setCustomLink(link, event);
+            });
         });
     };
 
@@ -158,9 +159,9 @@ LAUNCH_MARKDOWN_SERVER:
             if (pos_lineno <= 1) {
                 return;
             }
-            let pragma_line_id = "pragma-line-" + pos_lineno;
+            const pragma_line_id = "pragma-line-" + pos_lineno;
 
-            let elem = document.getElementById(pragma_line_id);
+            const elem = document.getElementById(pragma_line_id);
             if (elem) {
                 elem.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" });
             }
@@ -175,7 +176,7 @@ LAUNCH_MARKDOWN_SERVER:
     }
     function HmMarkdownSimpleServer_scollToPageEnd() {
         try {
-            let elem = document.getElementById("hm-pragma-line-end");
+            const elem = document.getElementById("hm-pragma-line-end");
             if (elem) {
                 elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
             }
