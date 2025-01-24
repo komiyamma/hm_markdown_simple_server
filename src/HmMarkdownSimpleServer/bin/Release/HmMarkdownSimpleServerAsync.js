@@ -1,6 +1,6 @@
 /// <reference path="../types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.4.2
+ * HmMarkdownSimpleServer v1.2.4.5
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -9,7 +9,6 @@
 if (typeof (objHmMarkdownSimpleServer) != "undefined") {
     objHmMarkdownSimpleServer._destructor();
 }
-debuginfo(2);
 class HmMarkdownSimpleServer {
     // ブラウザペインのターゲット。個別枠。
     static target_browser_pane = getVar('$TARGET_BROWSER_PANE');
