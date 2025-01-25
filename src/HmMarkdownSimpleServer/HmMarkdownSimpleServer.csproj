@@ -55,6 +55,7 @@
       <DependentUpon>HmNetCOM.tt</DependentUpon>
     </Compile>
     <Compile Include="HmUsedPortChecker.cs" />
+    <Compile Include="OpenDefaultBrowser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TemporaryFile.cs" />
   </ItemGroup>

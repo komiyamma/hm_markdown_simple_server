@@ -49,6 +49,8 @@ public class HmMarkdownSimpleServer
 
     int funcid = 0;
 
+    int port = 0;
+
     // Markdon処理のスタート
     public string Launch(string htmlTemplate)
     {
@@ -64,6 +66,7 @@ public class HmMarkdownSimpleServer
             darkmode = (int)(dynamic)Hm.Macro.Var["darkmode"];
             is_use_math_jax = (int)(dynamic)Hm.Macro.Var["#IS_USE_MATHJAX"];
             is_use_external_link_target_blank = (int)(dynamic)Hm.Macro.Var["#IS_USE_EXTERNAL_LINK_TARGET_BLANK"];
+            port = (int)(dynamic)Hm.Macro.Var["#PORT"];
 
             string tempFileFullPath = GetTemporaryFileName();
             prevFileFullPath = Hm.Edit.FilePath ?? "";
@@ -274,6 +277,7 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
             html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank.ToString());
+            html = html.Replace("$PORT", port.ToString());
 
             if (is_use_math_jax > 0)
             {

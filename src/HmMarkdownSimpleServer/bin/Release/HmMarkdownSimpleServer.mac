@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.6
+ * HmMarkdownSimpleServer v1.2.4.7
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -19,8 +19,10 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
 
-    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 1;  // 外部リンクについては、「外部ブラウザ枠」を使用する。
-
+    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 2;
+    // 0:秀丸の内部ブラウザ枠
+    // 1:秀丸の外部ブラウザ枠(オープン確認あり)
+    // 2:Windows登録のデフォルトブラウザ(オープン確認なし)
 
 RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
 
@@ -83,6 +85,59 @@ CREATE_MARKDOWN_SERVER_OBJECT:
 
 
 
+CREATE_MARKDOWN_FETCH_SERVER_OBJECT:
+
+    #FETCH_SERVER = createobject(currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownListeningServer");
+
+    setstaticvariable "HmMarkdownFetchServerLastObj", str(#FETCH_SERVER), 2; // 
+
+    keepobject #FETCH_SERVER, 1;
+
+    setcomdetachmethod #FETCH_SERVER, "OnReleaseObject";
+
+
+FIND_MARKDOWN_FETCH_SERVER_AVILABLE_PORT:
+
+    #BGN_PORT = 7101;                     // サーバー用に利用する 最低のポート番号
+    #END_PORT = 7200;                     // サーバー用に利用する 最大のポート番号。 最低でも50ポート幅は用意すること。
+
+    // 全秀丸共有で#MARKDOWN_HOSTPORTを持つ。１つずつインクリメントで「全秀丸プロセス」でユニークとし、まずは被りにくいようにする
+    $STR_PORT = getstaticvariable("HmMarkdownFetchServerLastPort", 1);
+
+    // 初回起動時は、#BGN_PORT を「かぶりにくい番号」とする。
+    if ($STR_PORT == "") {
+
+        #MARKDOWN_HOSTPORT = #BGN_PORT;
+
+    // 最後に起動した際のポート番号に1足したものを「被りにくい番号」とする。
+    } else {
+        #MARKDOWN_HOSTPORT = val($STR_PORT);
+
+        // 予め１ずつずらしているのは、「本当に使われていない」という判定はどうあってもOSに訪ねたとしても完璧にはならないため、
+        // 最低１ずつずらしていくことで、次に行う「本当に使われていないPort番号」の探索が「万が一」誤っていたとしても、Port番号が変わることにより問題なく動作する可能性が十分あるため。
+        #MARKDOWN_HOSTPORT = #MARKDOWN_HOSTPORT + 1;
+
+        // 指定のPort範囲外に溢れていたら、一番小さなPortから
+        if (#MARKDOWN_HOSTPORT < #BGN_PORT || #END_PORT-20 < #MARKDOWN_HOSTPORT) {
+            #MARKDOWN_HOSTPORT = #BGN_PORT;
+        }
+    }
+
+    setstaticvariable "HmMarkdownFetchServerLastPort", str(#MARKDOWN_HOSTPORT), 1;
+
+
+LAUNCH_MARKDOWN_FETCH_SERVER:
+
+    #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
+
+    if (#PORT == 0) {
+        message("ポート番号に空きがありません。\n#BGN_PORT と #END_PORT の範囲を広げて下さい。");
+        // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
+        endmacro;
+    }
+
+
+
 LAUNCH_MARKDOWN_SERVER:
 
     // 各種情報を基に、Markdownを簡易サーバーとして起動
@@ -105,12 +160,25 @@ LAUNCH_MARKDOWN_SERVER:
     function HmMarkdownSimpleServer_setCustomLink(link, event) {
         try {
             const href = link.getAttribute('href');
+            // リンクがhttpから始まっている
             if (href && href.startsWith('http')) {
+                // 秀丸の外部ブラウザ枠で開く。
                 if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
                     event.preventDefault();
                     window.open(href, '_blank');
                 }
+                // Windows登録のデフォルトブラウザで開く。(通常はユーザーが普段使っているブラウザ)
+                else if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 2) {
+                    if (HmMarkdownSimpleServer_port) {
+                        event.preventDefault();
+                        HmMarkdownSimpleServer_openExternalBrowser(href);
+                    } else {
+                        event.preventDefault();
+                        window.open(href, '_blank');
+                    }
+                }
             }
+            // ページ内リンクである
             else if (href && href.startsWith('#')) {
                 event.preventDefault();  // ページの遷移を防ぎ、
                 // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
@@ -183,9 +251,21 @@ LAUNCH_MARKDOWN_SERVER:
         } catch (e) {
         }
     }
-    function HmMarkdownSimpleServer_updateFetch(port) {
+    function HmMarkdownSimpleServer_openExternalBrowser(url) {
         try {
-            fetch("http://localhost:" + port)
+            if (HmMarkdownSimpleServer_port) {
+                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(url));
+            }
+        } catch (e) {
+            window.alert(e);
+        }
+    }
+
+    var HmMarkdownSimpleServer_port = $PORT;
+    function HmMarkdownSimpleServer_updateFetch(port) {
+        HmMarkdownSimpleServer_port = port;
+        try {
+            fetch("http://localhost:" + port + "/gettotaltext" )
                 .then(response => response.text())
                 .then(data => {
                     let panel = document.getElementById("update_panel");
@@ -214,56 +294,6 @@ LAUNCH_MARKDOWN_SERVER:
     );
 
 
-CREATE_MARKDOWN_FETCH_SERVER_OBJECT:
-
-    #FETCH_SERVER = createobject(currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownListeningServer");
-
-    setstaticvariable "HmMarkdownFetchServerLastObj", str(#FETCH_SERVER), 2; // 
-
-    keepobject #FETCH_SERVER, 1;
-
-    setcomdetachmethod #FETCH_SERVER, "OnReleaseObject";
-
-
-FIND_MARKDOWN_FETCH_SERVER_AVILABLE_PORT:
-
-    #BGN_PORT = 7101;                     // サーバー用に利用する 最低のポート番号
-    #END_PORT = 7200;                     // サーバー用に利用する 最大のポート番号。 最低でも50ポート幅は用意すること。
-
-    // 全秀丸共有で#MARKDOWN_HOSTPORTを持つ。１つずつインクリメントで「全秀丸プロセス」でユニークとし、まずは被りにくいようにする
-    $STR_PORT = getstaticvariable("HmMarkdownFetchServerLastPort", 1);
-
-    // 初回起動時は、#BGN_PORT を「かぶりにくい番号」とする。
-    if ($STR_PORT == "") {
-
-        #MARKDOWN_HOSTPORT = #BGN_PORT;
-
-    // 最後に起動した際のポート番号に1足したものを「被りにくい番号」とする。
-    } else {
-        #MARKDOWN_HOSTPORT = val($STR_PORT);
-
-        // 予め１ずつずらしているのは、「本当に使われていない」という判定はどうあってもOSに訪ねたとしても完璧にはならないため、
-        // 最低１ずつずらしていくことで、次に行う「本当に使われていないPort番号」の探索が「万が一」誤っていたとしても、Port番号が変わることにより問題なく動作する可能性が十分あるため。
-        #MARKDOWN_HOSTPORT = #MARKDOWN_HOSTPORT + 1;
-
-        // 指定のPort範囲外に溢れていたら、一番小さなPortから
-        if (#MARKDOWN_HOSTPORT < #BGN_PORT || #END_PORT-20 < #MARKDOWN_HOSTPORT) {
-            #MARKDOWN_HOSTPORT = #BGN_PORT;
-        }
-    }
-
-    setstaticvariable "HmMarkdownFetchServerLastPort", str(#MARKDOWN_HOSTPORT), 1;
-
-
-LAUNCH_MARKDOWN_FETCH_SERVER:
-
-    #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
-
-    if (#PORT == 0) {
-        message("ポート番号に空きがありません。\n#BGN_PORT と #END_PORT の範囲を広げて下さい。");
-        // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
-        endmacro;
-    }
 
 
 // この段階で先に表示しておくとかなり速い

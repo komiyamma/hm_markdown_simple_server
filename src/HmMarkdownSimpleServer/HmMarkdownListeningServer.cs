@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HmNetCOM;
 using Markdig;
+using Markdig.Extensions.AutoIdentifiers;
 
 namespace HmMarkdownSimpleServer;
 
@@ -71,7 +72,7 @@ public class HmMarkdownListeningServer
         try
         {
             string markdown = Hm.Edit.TotalText ?? "";
-            var pipeLine = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
             string html = Markdig.Markdown.ToHtml(markdown, pipeLine);
             return html;
         }
@@ -123,11 +124,31 @@ public class HmMarkdownListeningServer
                     // HTMLを表示する
                     if (request != null)
                     {
-                        string hmtext = GetTotalText();
-                        byte[] text = Encoding.UTF8.GetBytes(hmtext);
-                        response.ContentType = "text/html; charset=utf-8";
-                        response.ContentEncoding = Encoding.UTF8;
-                        response.OutputStream.Write(text, 0, text.Length);
+                        string requestedPath = request.Url.AbsolutePath;
+                        if (requestedPath == "/gettotaltext")
+                        {
+                            string hmtext = GetTotalText();
+                            byte[] text = Encoding.UTF8.GetBytes(hmtext);
+                            response.ContentType = "text/html; charset=utf-8";
+                            response.ContentEncoding = Encoding.UTF8;
+                            response.OutputStream.Write(text, 0, text.Length);
+                        }
+                        else
+                        {
+                            // requestedPathの最初の文字をカット
+                            // 2文字目以降を取得
+                            try
+                            {
+                                string access_url = requestedPath.Substring(1);
+                                DefaultBrowserLauncher.Launch(access_url);
+                            }
+                            catch (Exception e)
+                            {
+                                Hm.OutputPane.Output(e.Message + "\r\n");
+                            }
+                        }
+
+
                     }
                     else
                     {

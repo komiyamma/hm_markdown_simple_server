@@ -1,7 +1,7 @@
 /// <reference path="../types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.4.5
+ * HmMarkdownSimpleServer v1.2.4.7
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -233,6 +233,7 @@ class HmMarkdownSimpleServer {
                     posY = 0;
                 }
 
+
                 // 最後の行まであと3行程度なのであれば、最後の行にいる扱いにする。
                 if (allLineCount - posY < 3) {
                     posY = allLineCount;
@@ -435,7 +436,6 @@ class HmMarkdownSimpleServer {
         return diff;
     }
 }
-
 
 try {
     var objHmMarkdownSimpleServer = new HmMarkdownSimpleServer();
