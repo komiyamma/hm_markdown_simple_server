@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using HmNetCOM;
 using Markdig;
 using Markdig.Extensions.AutoIdentifiers;
+using System.Security.AccessControl;
+using System.Security.Policy;
 
 namespace HmMarkdownSimpleServer;
 
@@ -139,8 +141,12 @@ public class HmMarkdownListeningServer
                             // 2文字目以降を取得
                             try
                             {
+                                string absolute_uri = request.Url.AbsoluteUri;
+                                // absolute_uriの先頭から $"http://localhost:{port}/" を削除
+                                absolute_uri = absolute_uri.Substring($"http://localhost:{port}/".Length);
                                 string access_url = requestedPath.Substring(1);
-                                DefaultBrowserLauncher.Launch(access_url);
+                                string decode_url = WebUtility.UrlDecode(absolute_uri);
+                                DefaultBrowserLauncher.Launch(decode_url);
                             }
                             catch (Exception e)
                             {
