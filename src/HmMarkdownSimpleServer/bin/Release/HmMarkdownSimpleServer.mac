@@ -160,6 +160,7 @@ LAUNCH_MARKDOWN_SERVER:
     function HmMarkdownSimpleServer_setCustomLink(link, event) {
         try {
             const href = link.getAttribute('href');
+            const target = link.getAttribute('target');
             // リンクがhttpから始まっている
             if (href && href.startsWith('http')) {
                 // 秀丸の外部ブラウザ枠で開く。
@@ -171,7 +172,7 @@ LAUNCH_MARKDOWN_SERVER:
                 else if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 2) {
                     if (HmMarkdownSimpleServer_port) {
                         event.preventDefault();
-                        HmMarkdownSimpleServer_openExternalBrowser(href);
+                        HmMarkdownSimpleServer_openExternalBrowser(href, target);
                     } else {
                         event.preventDefault();
                         window.open(href, '_blank');
@@ -251,10 +252,14 @@ LAUNCH_MARKDOWN_SERVER:
         } catch (e) {
         }
     }
-    function HmMarkdownSimpleServer_openExternalBrowser(url) {
+
+    function HmMarkdownSimpleServer_openExternalBrowser(href, target) {
         try {
             if (HmMarkdownSimpleServer_port) {
-                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(url));
+                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(href))
+                .catch(error => {
+                    window.open(href, target);
+                });
             }
         } catch (e) {
             window.alert(e);
