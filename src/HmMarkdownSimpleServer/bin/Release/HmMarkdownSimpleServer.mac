@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.8
+ * HmMarkdownSimpleServer v1.2.4.9
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -153,9 +153,29 @@ LAUNCH_MARKDOWN_SERVER:
     <body class="markdown-body">
     $MATHJAX_CONFIG
     <script>
+    // ブラウザ枠表示の直後は、1.5秒ほどは安定しない上、直後にユーザーがブラウザ枠で操作すると、制御が喧嘩しやすいので、特別なホットタイムを設ける。
+    let HmMarkdownSimpleServer_DOMContentLoadedHotTiming = true;
     document.addEventListener('DOMContentLoaded', () => {
         HmMarkdownSimpleServer_updateAHrefTarget();
+        setTimeout(()=>{HmMarkdownSimpleServer_DOMContentLoadedHotTiming = false;}, 1500);
     });
+
+    // ブラウザ枠表示の直後に、ユーザー操作でクリックした場合は、マクロからの座標強制移動を取り下げることで、「制御が喧嘩してる感」を抑制する
+    let HmMarkdownSimpleServer_clickHotTiming = false;
+    let HmMarkdownSimpleServer_clickHotTimingTimerHandle = 0;
+    function startClickHotTiming() {
+        if (!HmMarkdownSimpleServer_DOMContentLoadedHotTiming) {
+            return;
+        }
+        // リンクを操作した直後に再度リンクを操作することもあるので、多回数押しても破綻しないように
+        HmMarkdownSimpleServer_clickHotTiming = true;
+        if (HmMarkdownSimpleServer_clickHotTimingTimerHandle) {
+            clearTimeout(HmMarkdownSimpleServer_clickHotTimingTimerHandle);
+        }
+        HmMarkdownSimpleServer_clickHotTimingTimerHandle = setTimeout(()=>{
+            HmMarkdownSimpleServer_clickHotTiming = false;
+        }, 1000);
+    }
 
     function HmMarkdownSimpleServer_setCustomLink(link, event) {
         try {
@@ -188,6 +208,7 @@ LAUNCH_MARKDOWN_SERVER:
                 const elem = document.getElementById(link_id);
                 if (elem) {
                     elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    startClickHotTiming();
                     return;
                 }
 
@@ -196,6 +217,7 @@ LAUNCH_MARKDOWN_SERVER:
                 const elem_decode = document.getElementById(link_decode);
                 if (elem_decode) {
                     elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    startClickHotTiming();
                     return;
                 }
 
@@ -204,6 +226,7 @@ LAUNCH_MARKDOWN_SERVER:
                 for (const header of headers) {
                     if (link_decode === header.textContent) {
                         header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                        startClickHotTiming();
                         break;
                     }
                 } 
@@ -224,6 +247,7 @@ LAUNCH_MARKDOWN_SERVER:
     };
 
     function HmMarkdownSimpleServer_scollToPagePos(pos_lineno) {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
         try {
             if (pos_lineno <= 1) {
                 return;
@@ -238,12 +262,14 @@ LAUNCH_MARKDOWN_SERVER:
         }
     }
     function HmMarkdownSimpleServer_scollToPageBgn() {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
         try {
             scrollTo(0, 0);
         } catch (e) {
         }
     }
     function HmMarkdownSimpleServer_scollToPageEnd() {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
         try {
             const elem = document.getElementById("hm-pragma-line-end");
             if (elem) {
