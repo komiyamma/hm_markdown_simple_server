@@ -1,6 +1,6 @@
 /// <reference path="../types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.4.7
+ * HmMarkdownSimpleServer v1.2.5.0
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -21,6 +21,10 @@ class HmMarkdownSimpleServer {
     static realtimemode_max_textlength = getVar('#REALTIME_MODE_TEXT_LENGTH_MAX');
     // カーソルにブラウザ枠が追従するモード
     static cursor_follow_mode = getVar('#CURSOR_FOLLOW_MODE');
+    // 監視インターバル
+    static tick_interval = 1000;
+    // 最後のチック
+    static last_ticktime = -9999;
     constructor() {
         // 初期化
         HmMarkdownSimpleServer.initVariable();
@@ -50,7 +54,7 @@ class HmMarkdownSimpleServer {
     }
     // Tick作成。
     static createIntervalTick(func) {
-        return hidemaru.setInterval(func, 1000);
+        return hidemaru.setInterval(func, HmMarkdownSimpleServer.tick_interval);
     }
     // sleep 相当。ECMAScript には sleep が無いので。
     static sleep_in_tick(ms) {
@@ -86,6 +90,15 @@ class HmMarkdownSimpleServer {
     // Tick。
     static async tickMethod() {
         try {
+            // 本当にタイム差分が経過していることを担保
+            // する。これは setInterval系は、他関数がブロック的な処理だと、setInterval指定の関数の実行をキューでどんどん積んでいくことがあるため。
+            // そしてブロックが解放されたとたん、あわてて全部一気にキューが連続で実行されるようなことを避ける。
+            const tick_couunt = tickcount();
+            const diff_time = tick_couunt - HmMarkdownSimpleServer.last_ticktime;
+            if (diff_time < HmMarkdownSimpleServer.tick_interval) {
+                return;
+            }
+            HmMarkdownSimpleServer.last_ticktime = tick_couunt;
             // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
             if (hidemaru.isMacroExecuting()) {
                 return;

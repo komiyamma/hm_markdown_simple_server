@@ -1,14 +1,14 @@
 /// <reference path="../types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.4.7
+ * HmMarkdownSimpleServer v1.2.5.0
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
  */
 
 // 前回のが残っていれば、クリア
-if (typeof(objHmMarkdownSimpleServer) != "undefined") {
+if (typeof (objHmMarkdownSimpleServer) != "undefined") {
     objHmMarkdownSimpleServer._destructor();
 }
 
@@ -29,6 +29,12 @@ class HmMarkdownSimpleServer {
 
     // カーソルにブラウザ枠が追従するモード
     static cursor_follow_mode: number = getVar('#CURSOR_FOLLOW_MODE') as number;
+
+    // 監視インターバル
+    static tick_interval: number = 1000;
+
+    // 最後のチック
+    static last_ticktime: number = -9999;
 
     constructor() {
         // 初期化
@@ -70,7 +76,7 @@ class HmMarkdownSimpleServer {
 
     // Tick作成。
     static createIntervalTick(func): number {
-        return hidemaru.setInterval(func, 1000);
+        return hidemaru.setInterval(func, HmMarkdownSimpleServer.tick_interval);
     }
 
     // sleep 相当。ECMAScript には sleep が無いので。
@@ -88,34 +94,46 @@ class HmMarkdownSimpleServer {
             show: 1
         });
         */
-    
+
         // コマンド実行したので、loadが完了するまで待つ
         // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
         // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
         for (let i = 0; i < 20; i++) {
-    
+
             let status = browserpanecommand({
                 target: HmMarkdownSimpleServer.target_browser_pane,
                 get: "load"
             })
-    
+
             if (status == "1") {
                 break;
             }
-    
+
             await HmMarkdownSimpleServer.sleep_in_tick(100);
         }
-    
+
         // １回走らせる
         HmMarkdownSimpleServer.tickMethod();
-    
+
         // Tick作成 (１秒間隔で実行)
         HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethod);
-    }    
+    }
 
     // Tick。
     static async tickMethod(): Promise<void> {
         try {
+
+            // 本当にタイム差分が経過していることを担保
+            // する。これは setInterval系は、他関数がブロック的な処理だと、setInterval指定の関数の実行をキューでどんどん積んでいくことがあるため。
+            // そしてブロックが解放されたとたん、あわてて全部一気にキューが連続で実行されるようなことを避ける。
+            const tick_couunt = tickcount();
+            const diff_time = tick_couunt - HmMarkdownSimpleServer.last_ticktime;
+            if (diff_time < HmMarkdownSimpleServer.tick_interval) {
+                return;
+            }
+
+            HmMarkdownSimpleServer.last_ticktime = tick_couunt;
+
             // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
             if (hidemaru.isMacroExecuting()) {
                 return;
@@ -439,13 +457,13 @@ class HmMarkdownSimpleServer {
 
 try {
     var objHmMarkdownSimpleServer = new HmMarkdownSimpleServer();
-} catch(err) {
+} catch (err) {
     // エラーならアウトプット枠に
     let outdll = hidemaru.loadDll("HmOutputPane.dll");
     outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${err}\r\n`);
 
     // タイマー残骸が残らないように
-    if (typeof(objHmMarkdownSimpleServer) != "undefined") {
+    if (typeof (objHmMarkdownSimpleServer) != "undefined") {
         objHmMarkdownSimpleServer._destructor();
     }
 }

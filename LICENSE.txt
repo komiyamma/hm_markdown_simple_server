@@ -1,6 +1,6 @@
 - HmMarkdownSimpleServer
 
-  Copyright (c) 2023-2024 Akitsugu Komiyama
+  Copyright (c) 2023-2025 Akitsugu Komiyama
 
 
 The MIT License (MIT)

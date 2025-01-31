@@ -1,11 +1,11 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.4.9
+ * HmMarkdownSimpleServer v1.2.5.0
  *
- * Copyright (c) 2023-2024 Akitsugu Komiyama
+ * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
 
-hidemaruversion "9.22.17";
+hidemaruversion "9.22.99";
 
 
 setcompatiblemode 0x08000000; // マクロ内変数を他と共用しない。
