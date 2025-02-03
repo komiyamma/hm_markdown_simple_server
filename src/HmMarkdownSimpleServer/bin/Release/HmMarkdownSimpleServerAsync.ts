@@ -1,7 +1,7 @@
 /// <reference path="../types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.5.0
+ * HmMarkdownSimpleServer v1.2.5.1
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -311,15 +311,12 @@ class HmMarkdownSimpleServer {
         ○ 0x00040000 Hidemaru_CheckQueueStatus相当
         */
         let s = hidemaru.getInputStates();
-        if (s & 0x00000004) { return true; }
-        if (s & 0x00000008) { return true; }
-        if (s & 0x00000010) { return true; }
-        if (s & 0x00000200) { return true; }
-        if (s & 0x00000400) { return true; }
-        if (s & 0x00000800) { return true; }
-        if (s & 0x00001000) { return true; }
-        if (s & 0x00020000) { return true; }
-        return false;
+        const notAllowedMask = 
+              0x00000004 | 0x00000008 | 0x00000010 | 
+              0x00000200 | 0x00000400 | 0x00000800 | 
+              0x00001000 | 0x00020000;
+
+        return (s & notAllowedMask) != 0;
     }
 
     static lastUpdateCount: number = 0;
