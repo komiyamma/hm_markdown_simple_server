@@ -126,13 +126,13 @@ class HmMarkdownSimpleServer {
             // 本当にタイム差分が経過していることを担保
             // する。これは setInterval系は、他関数がブロック的な処理だと、setInterval指定の関数の実行をキューでどんどん積んでいくことがあるため。
             // そしてブロックが解放されたとたん、あわてて全部一気にキューが連続で実行されるようなことを避ける。
-            const tick_couunt = tickcount();
-            const diff_time = tick_couunt - HmMarkdownSimpleServer.last_ticktime;
+            const tick_count = tickcount();
+            const diff_time = tick_count - HmMarkdownSimpleServer.last_ticktime;
             if (diff_time < HmMarkdownSimpleServer.tick_interval) {
                 return;
             }
 
-            HmMarkdownSimpleServer.last_ticktime = tick_couunt;
+            HmMarkdownSimpleServer.last_ticktime = tick_count;
 
             // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
             if (hidemaru.isMacroExecuting()) {
