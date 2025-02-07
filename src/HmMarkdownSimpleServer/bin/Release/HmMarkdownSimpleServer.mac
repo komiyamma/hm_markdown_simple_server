@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.5.0
+ * HmMarkdownSimpleServer v1.2.5.2
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -177,7 +177,19 @@ LAUNCH_MARKDOWN_SERVER:
         }, 1000);
     }
 
-    function HmMarkdownSimpleServer_setCustomLink(link, event) {
+    document.addEventListener('click', (event) => {
+        try {
+            // クリックされた要素が <a> タグかどうかを確認
+            const link = event.target.closest('a[href]');
+
+            if (link) {
+                HmMarkdownSimpleServer_checkCustomLink(link, event);
+            }
+        } catch (e) {
+        }
+    });
+
+    function HmMarkdownSimpleServer_checkCustomLink(link, event) {
         try {
             const href = link.getAttribute('href');
             const target = link.getAttribute('target');
@@ -236,15 +248,18 @@ LAUNCH_MARKDOWN_SERVER:
         }
     }
 
-    function HmMarkdownSimpleServer_updateAHrefTarget() {
-        const links = document.querySelectorAll('a');
-
-        links.forEach(link => {
-            link.addEventListener('click', event => {
-                HmMarkdownSimpleServer_setCustomLink(link, event);
-            });
-        });
-    };
+    function HmMarkdownSimpleServer_openExternalBrowser(href, target) {
+        try {
+            if (HmMarkdownSimpleServer_port) {
+                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(href))
+                .catch(error => {
+                    window.open(href, target);
+                });
+            }
+        } catch (e) {
+            window.alert(e);
+        }
+    }
 
     function HmMarkdownSimpleServer_scollToPagePos(pos_lineno) {
         if (HmMarkdownSimpleServer_clickHotTiming) { return; }
@@ -279,19 +294,6 @@ LAUNCH_MARKDOWN_SERVER:
         }
     }
 
-    function HmMarkdownSimpleServer_openExternalBrowser(href, target) {
-        try {
-            if (HmMarkdownSimpleServer_port) {
-                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(href))
-                .catch(error => {
-                    window.open(href, target);
-                });
-            }
-        } catch (e) {
-            window.alert(e);
-        }
-    }
-
     var HmMarkdownSimpleServer_port = $PORT;
     function HmMarkdownSimpleServer_updateFetch(port) {
         HmMarkdownSimpleServer_port = port;
@@ -307,7 +309,6 @@ LAUNCH_MARKDOWN_SERVER:
                             let math = document.getElementsByClassName("math");
                             MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
                         }
-                        HmMarkdownSimpleServer_updateAHrefTarget();
                     }
                 })
                 .catch(error => {
