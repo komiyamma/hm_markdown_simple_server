@@ -12,8 +12,6 @@ if (typeof (objHmMarkdownSimpleServer) != "undefined") {
     objHmMarkdownSimpleServer._destructor();
 }
 
-debuginfo(2)
-
 class HmMarkdownSimpleServer {
     // ブラウザペインのターゲット。個別枠。
     static target_browser_pane: IBrowserPaneTargetString = getVar('$TARGET_BROWSER_PANE') as IBrowserPaneTargetString;
