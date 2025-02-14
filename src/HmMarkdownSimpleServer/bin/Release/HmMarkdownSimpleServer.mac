@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.5.2
+ * HmMarkdownSimpleServer v1.2.5.3
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -279,7 +279,11 @@ LAUNCH_MARKDOWN_SERVER:
     function HmMarkdownSimpleServer_scollToPageBgn() {
         if (HmMarkdownSimpleServer_clickHotTiming) { return; }
         try {
-            scrollTo(0, 0);
+            if (window.pageXOffset === 0 && window.pageYOffset === 0) {
+                ; // すでに先頭。何もしない。
+            } else {
+                scrollTo(0, 0);
+            }
         } catch (e) {
         }
     }

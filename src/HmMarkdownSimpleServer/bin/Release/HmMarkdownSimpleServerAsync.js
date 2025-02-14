@@ -1,6 +1,6 @@
-/// <reference path="../types/hm_jsmode.d.ts" />
+/// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.5.1
+ * HmMarkdownSimpleServer v1.2.5.3
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -9,6 +9,7 @@
 if (typeof (objHmMarkdownSimpleServer) != "undefined") {
     objHmMarkdownSimpleServer._destructor();
 }
+debuginfo(2);
 class HmMarkdownSimpleServer {
     // ブラウザペインのターゲット。個別枠。
     static target_browser_pane = getVar('$TARGET_BROWSER_PANE');
@@ -33,6 +34,8 @@ class HmMarkdownSimpleServer {
     _destructor() {
         // 前回のが残っているかもしれないので、止める
         HmMarkdownSimpleServer.stopIntervalTick(HmMarkdownSimpleServer.timerHandle);
+        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
     }
     // 初期化
     static initVariable() {
@@ -60,35 +63,34 @@ class HmMarkdownSimpleServer {
     static sleep_in_tick(ms) {
         return new Promise(resolve => hidemaru.setTimeout(resolve, ms));
     }
+    static initTimerHandle = 0;
     static async initAsync() {
-        // 表示
-        /*
-        browserpanecommand({
-            target: target_browser_pane,
-            url: absolute_url,
-            show: 1
-        });
-        */
+        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+        let checkCount = 0;
         // コマンド実行したので、loadが完了するまで待つ
         // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
         // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
-        for (let i = 0; i < 20; i++) {
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setInterval(() => {
+            checkCount++;
+            // なんか初期化されない模様。諦めた
+            if (checkCount > 20) {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+            }
             let status = browserpanecommand({
                 target: HmMarkdownSimpleServer.target_browser_pane,
-                get: "load"
+                get: "readyState"
             });
-            if (status == "1") {
-                break;
+            if (status == "complete") {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+                // １回走らせる
+                HmMarkdownSimpleServer.tickMethodText();
+                // Tick作成 (１秒間隔で実行)
+                HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
             }
-            await HmMarkdownSimpleServer.sleep_in_tick(100);
-        }
-        // １回走らせる
-        HmMarkdownSimpleServer.tickMethod();
-        // Tick作成 (１秒間隔で実行)
-        HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethod);
+        }, 200);
     }
     // Tick。
-    static async tickMethod() {
+    static async tickMethodText() {
         try {
             // 本当にタイム差分が経過していることを担保
             // する。これは setInterval系は、他関数がブロック的な処理だと、setInterval指定の関数の実行をキューでどんどん積んでいくことがあるため。
@@ -123,18 +125,6 @@ class HmMarkdownSimpleServer {
                     url: `javascript:HmMarkdownSimpleServer_updateFetch(${HmMarkdownSimpleServer.port})`,
                     show: 1
                 });
-                // コマンド実行したので、complete になるまで待つ
-                // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
-                for (let i = 0; i < 3; i++) {
-                    await HmMarkdownSimpleServer.sleep_in_tick(200);
-                    let status = browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        get: "readyState"
-                    });
-                    if (status == "complete") {
-                        break;
-                    }
-                }
             }
             else {
                 let isUpdate = HmMarkdownSimpleServer.isFileLastModifyUpdated();
@@ -144,84 +134,97 @@ class HmMarkdownSimpleServer {
                         show: 1,
                         refresh: 1
                     });
-                    // コマンド実行したので、loadが完了するまで待つ
-                    // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
-                    for (let i = 0; i < 6; i++) {
-                        await HmMarkdownSimpleServer.sleep_in_tick(100);
-                        let status = browserpanecommand({
-                            target: HmMarkdownSimpleServer.target_browser_pane,
-                            get: "load"
-                        });
-                        if (status == "1") {
-                            break;
-                        }
-                    }
                 }
             }
-            // 時間が経過しているため、同じ判定を行う
-            // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
-            if (hidemaru.isMacroExecuting()) {
-                return;
-            }
-            // この操作対象中は、javascriptによる更新しない。何が起こるかわからん
-            if (HmMarkdownSimpleServer.isNotDetectedOperation()) {
-                return;
-            }
-            // uriが想定のものを違っていたら、何もしない
-            current_url = browserpanecommand({
-                get: "url",
-                target: HmMarkdownSimpleServer.target_browser_pane
-            });
-            // uriが想定のものを違っていたら、何もしない
-            // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
-            if (!current_url.includes(HmMarkdownSimpleServer.absolute_url)) {
-                return;
-            }
-            // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
-            let [isDiff, posY, allLineCount] = HmMarkdownSimpleServer.getChangeYPos();
-            // Zero Division Error回避
-            if (allLineCount <= 0) {
-                allLineCount = 1;
-            }
-            // 何か変化が起きていて、かつ、linenoが1以上
-            if (isDiff && posY > 0) {
-                // 最初の行まであと3行程度なのであれば、最初にいる扱いにする。
-                if (posY <= 3) {
-                    posY = 0;
-                }
-                // 最後の行まであと3行程度なのであれば、最後の行にいる扱いにする。
-                if (allLineCount - posY < 3) {
-                    posY = allLineCount;
-                }
-                // perYが0以上1以下になるように正規化する。
-                let perY = posY / allLineCount;
-                // perYが0以下なら、ブラウザは先頭へ
-                if (perY <= 0) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
-                    });
-                }
-                // perYが1以上なら、ブラウザは末尾へ
-                else if (perY >= 1) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
-                    });
-                }
-                // それ以外なら、現在の位置を計算して移動する。
-                else if (HmMarkdownSimpleServer.cursor_follow_mode == 1) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (HmMarkdownSimpleServer.getCurCursorYPos() - 1) + ");"
-                    });
-                }
-            }
+            // スクロールメソッドに移行するため、一度関数を抜ける。(待ちがわずかに発生すうるので関数から抜けて他のJSが処理できるようにする)
+            HmMarkdownSimpleServer.tryToScrollMethod();
         }
         catch (e) {
             // エラーならアウトプット枠に
             let outdll = hidemaru.loadDll("HmOutputPane.dll");
             outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${e}\r\n`);
+        }
+    }
+    static toScrollMethodTimerHandle = 0;
+    // スクロールメソッドに移行するためTickトライ
+    static tryToScrollMethod() {
+        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+        let toScrollMethodTryCount = 0;
+        let toScrollMethodTryFunc = () => {
+            toScrollMethodTryCount++;
+            if (toScrollMethodTryCount > 3) {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+            }
+            let status = browserpanecommand({
+                target: HmMarkdownSimpleServer.target_browser_pane,
+                get: "readyState"
+            });
+            if (status == "complete") {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+                HmMarkdownSimpleServer.tickMethodScroll();
+            }
+        };
+        HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setInterval(toScrollMethodTryFunc, 200);
+    }
+    static tickMethodScroll() {
+        // 時間が経過しているため、同じ判定を行う
+        // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
+        if (hidemaru.isMacroExecuting()) {
+            return;
+        }
+        // この操作対象中は、javascriptによる更新しない。何が起こるかわからん
+        if (HmMarkdownSimpleServer.isNotDetectedOperation()) {
+            return;
+        }
+        // uriが想定のものを違っていたら、何もしない
+        let current_url = browserpanecommand({
+            get: "url",
+            target: HmMarkdownSimpleServer.target_browser_pane
+        });
+        // uriが想定のものを違っていたら、何もしない
+        // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
+        if (!current_url.includes(HmMarkdownSimpleServer.absolute_url)) {
+            return;
+        }
+        // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
+        let [isDiff, posY, allLineCount] = HmMarkdownSimpleServer.getChangeYPos();
+        // Zero Division Error回避
+        if (allLineCount <= 0) {
+            allLineCount = 1;
+        }
+        // 何か変化が起きていて、かつ、linenoが1以上
+        if (isDiff && posY > 0) {
+            // 最初の行まであと3行程度なのであれば、最初にいる扱いにする。
+            if (posY <= 3) {
+                posY = 0;
+            }
+            // 最後の行まであと3行程度なのであれば、最後の行にいる扱いにする。
+            if (allLineCount - posY < 3) {
+                posY = allLineCount;
+            }
+            // perYが0以上1以下になるように正規化する。
+            let perY = posY / allLineCount;
+            // perYが0以下なら、ブラウザは先頭へ
+            if (perY <= 0) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
+                });
+            }
+            // perYが1以上なら、ブラウザは末尾へ
+            else if (perY >= 1) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
+                });
+            }
+            // それ以外なら、現在の位置を計算して移動する。
+            else if (HmMarkdownSimpleServer.cursor_follow_mode == 1) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (HmMarkdownSimpleServer.getCurCursorYPos() - 1) + ");"
+                });
+            }
         }
     }
     static isNotDetectedOperation() {

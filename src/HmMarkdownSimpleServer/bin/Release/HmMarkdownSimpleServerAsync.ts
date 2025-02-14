@@ -1,7 +1,7 @@
-/// <reference path="../types/hm_jsmode.d.ts" />
+/// <reference path="types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.5.1
+ * HmMarkdownSimpleServer v1.2.5.3
  *
  * Copyright (c) 2023-2024 Akitsugu Komiyama
  * under the MIT License
@@ -11,6 +11,8 @@
 if (typeof (objHmMarkdownSimpleServer) != "undefined") {
     objHmMarkdownSimpleServer._destructor();
 }
+
+debuginfo(2)
 
 class HmMarkdownSimpleServer {
     // ブラウザペインのターゲット。個別枠。
@@ -46,7 +48,8 @@ class HmMarkdownSimpleServer {
     _destructor(): void {
         // 前回のが残っているかもしれないので、止める
         HmMarkdownSimpleServer.stopIntervalTick(HmMarkdownSimpleServer.timerHandle);
-
+        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
     }
 
 
@@ -84,43 +87,44 @@ class HmMarkdownSimpleServer {
         return new Promise(resolve => hidemaru.setTimeout(resolve, ms));
     }
 
+    static initTimerHandle: number = 0;
+
     static async initAsync(): Promise<void> {
+        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
 
-        // 表示
-        /*
-        browserpanecommand({
-            target: target_browser_pane,
-            url: absolute_url,
-            show: 1
-        });
-        */
-
+        let checkCount = 0;
         // コマンド実行したので、loadが完了するまで待つ
         // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
         // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
-        for (let i = 0; i < 20; i++) {
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setInterval(() => {
+            checkCount++;
+            // なんか初期化されない模様。諦めた
+            if (checkCount > 20) {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+            }
+
 
             let status = browserpanecommand({
                 target: HmMarkdownSimpleServer.target_browser_pane,
-                get: "load"
+                get: "readyState"
             })
 
-            if (status == "1") {
-                break;
+            if (status == "complete") {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+
+                // １回走らせる
+                HmMarkdownSimpleServer.tickMethodText();
+
+                // Tick作成 (１秒間隔で実行)
+                HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
+
             }
 
-            await HmMarkdownSimpleServer.sleep_in_tick(100);
-        }
-
-        // １回走らせる
-        HmMarkdownSimpleServer.tickMethod();
-
-        // Tick作成 (１秒間隔で実行)
-        HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethod);
+        }, 200);
     }
 
     // Tick。
-    static async tickMethod(): Promise<void> {
+    static async tickMethodText(): Promise<void> {
         try {
 
             // 本当にタイム差分が経過していることを担保
@@ -166,20 +170,6 @@ class HmMarkdownSimpleServer {
                         show: 1
                     }
                 );
-
-                // コマンド実行したので、complete になるまで待つ
-                // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
-                for (let i = 0; i < 3; i++) {
-                    await HmMarkdownSimpleServer.sleep_in_tick(200);
-                    let status = browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        get: "readyState"
-                    })
-
-                    if (status == "complete") {
-                        break;
-                    }
-                }
             }
 
             else {
@@ -192,23 +182,46 @@ class HmMarkdownSimpleServer {
                             refresh: 1
                         }
                     );
-
-                    // コマンド実行したので、loadが完了するまで待つ
-                    // 0.6秒くらいまつのが限界。それ以上待つと、次のTickが来かねない。
-                    for (let i = 0; i < 6; i++) {
-                        await HmMarkdownSimpleServer.sleep_in_tick(100);
-                        let status = browserpanecommand({
-                            target: HmMarkdownSimpleServer.target_browser_pane,
-                            get: "load"
-                        })
-
-                        if (status == "1") {
-                            break;
-                        }
-                    }
                 }
             }
 
+            // スクロールメソッドに移行するため、一度関数を抜ける。(待ちがわずかに発生すうるので関数から抜けて他のJSが処理できるようにする)
+            HmMarkdownSimpleServer.tryToScrollMethod();
+
+        } catch (e) {
+            // エラーならアウトプット枠に
+            let outdll = hidemaru.loadDll("HmOutputPane.dll");
+            outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${e}\r\n`);
+        }
+    }
+
+    static toScrollMethodTimerHandle: number = 0;
+
+    // スクロールメソッドに移行するためTickトライ
+    static tryToScrollMethod(): void {
+        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+
+        let toScrollMethodTryCount = 0;
+        let toScrollMethodTryFunc = () => {
+            toScrollMethodTryCount++;
+            if (toScrollMethodTryCount > 3) {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+            }
+            let status = browserpanecommand({
+                target: HmMarkdownSimpleServer.target_browser_pane,
+                get: "readyState"
+            })
+
+            if (status == "complete") {
+                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+                HmMarkdownSimpleServer.tickMethodScroll();
+            }
+        }
+
+        HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setInterval(toScrollMethodTryFunc, 200);
+    }
+
+    static tickMethodScroll(): void {
             // 時間が経過しているため、同じ判定を行う
 
             // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
@@ -222,7 +235,7 @@ class HmMarkdownSimpleServer {
             }
 
             // uriが想定のものを違っていたら、何もしない
-            current_url = browserpanecommand(
+            let current_url = browserpanecommand(
                 {
                     get: "url",
                     target: HmMarkdownSimpleServer.target_browser_pane
@@ -284,11 +297,7 @@ class HmMarkdownSimpleServer {
                     });
                 }
             }
-        } catch (e) {
-            // エラーならアウトプット枠に
-            let outdll = hidemaru.loadDll("HmOutputPane.dll");
-            outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${e}\r\n`);
-        }
+
     }
 
     static isNotDetectedOperation(): boolean {
