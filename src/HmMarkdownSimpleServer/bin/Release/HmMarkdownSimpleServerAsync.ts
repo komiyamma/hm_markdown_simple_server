@@ -3,7 +3,7 @@
 /*
  * HmMarkdownSimpleServer v1.2.5.3
  *
- * Copyright (c) 2023-2024 Akitsugu Komiyama
+ * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
 
