@@ -220,82 +220,81 @@ class HmMarkdownSimpleServer {
     }
 
     static tickMethodScroll(): void {
-            // 時間が経過しているため、同じ判定を行う
+        // 時間が経過しているため、同じ判定を行う
 
-            // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
-            if (hidemaru.isMacroExecuting()) {
-                return;
+        // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
+        if (hidemaru.isMacroExecuting()) {
+            return;
+        }
+
+        // この操作対象中は、javascriptによる更新しない。何が起こるかわからん
+        if (HmMarkdownSimpleServer.isNotDetectedOperation()) {
+            return;
+        }
+
+        // uriが想定のものを違っていたら、何もしない
+        let current_url = browserpanecommand(
+            {
+                get: "url",
+                target: HmMarkdownSimpleServer.target_browser_pane
+            }
+        );
+
+        // uriが想定のものを違っていたら、何もしない
+        // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
+        if (!current_url.includes(HmMarkdownSimpleServer.absolute_url)) {
+            return;
+        }
+
+        // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
+        let [isDiff, posY, allLineCount] = HmMarkdownSimpleServer.getChangeYPos();
+
+        // Zero Division Error回避
+        if (allLineCount <= 0) {
+            allLineCount = 1;
+        }
+
+        // 何か変化が起きていて、かつ、linenoが1以上
+        if (isDiff && posY > 0) {
+
+            // 最初の行まであと3行程度なのであれば、最初にいる扱いにする。
+            if (posY <= 3) {
+                posY = 0;
             }
 
-            // この操作対象中は、javascriptによる更新しない。何が起こるかわからん
-            if (HmMarkdownSimpleServer.isNotDetectedOperation()) {
-                return;
+
+            // 最後の行まであと3行程度なのであれば、最後の行にいる扱いにする。
+            if (allLineCount - posY < 3) {
+                posY = allLineCount;
             }
 
-            // uriが想定のものを違っていたら、何もしない
-            let current_url = browserpanecommand(
-                {
-                    get: "url",
-                    target: HmMarkdownSimpleServer.target_browser_pane
-                }
-            );
+            // perYが0以上1以下になるように正規化する。
+            let perY = posY / allLineCount;
 
-            // uriが想定のものを違っていたら、何もしない
-            // 上にも同じ判定はあるが、最大で0.6秒経過しているため、ここでもしておく
-            if (!current_url.includes(HmMarkdownSimpleServer.absolute_url)) {
-                return;
+            // perYが0以下なら、ブラウザは先頭へ
+            if (perY <= 0) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
+                });
             }
 
-            // 何か変化が起きている？ linenoは変化した？ または、全体の行数が変化した？
-            let [isDiff, posY, allLineCount] = HmMarkdownSimpleServer.getChangeYPos();
-
-            // Zero Division Error回避
-            if (allLineCount <= 0) {
-                allLineCount = 1;
+            // perYが1以上なら、ブラウザは末尾へ
+            else if (perY >= 1) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
+                });
             }
 
-            // 何か変化が起きていて、かつ、linenoが1以上
-            if (isDiff && posY > 0) {
-
-                // 最初の行まであと3行程度なのであれば、最初にいる扱いにする。
-                if (posY <= 3) {
-                    posY = 0;
-                }
-
-
-                // 最後の行まであと3行程度なのであれば、最後の行にいる扱いにする。
-                if (allLineCount - posY < 3) {
-                    posY = allLineCount;
-                }
-
-                // perYが0以上1以下になるように正規化する。
-                let perY = posY / allLineCount;
-
-                // perYが0以下なら、ブラウザは先頭へ
-                if (perY <= 0) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPageBgn();"
-                    });
-                }
-
-                // perYが1以上なら、ブラウザは末尾へ
-                else if (perY >= 1) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPageEnd();"
-                    });
-                }
-
-                // それ以外なら、現在の位置を計算して移動する。
-                else if (HmMarkdownSimpleServer.cursor_follow_mode == 1) {
-                    browserpanecommand({
-                        target: HmMarkdownSimpleServer.target_browser_pane,
-                        url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (HmMarkdownSimpleServer.getCurCursorYPos() - 1) + ");"
-                    });
-                }
+            // それ以外なら、現在の位置を計算して移動する。
+            else if (HmMarkdownSimpleServer.cursor_follow_mode == 1) {
+                browserpanecommand({
+                    target: HmMarkdownSimpleServer.target_browser_pane,
+                    url: "javascript:HmMarkdownSimpleServer_scollToPagePos(" + (HmMarkdownSimpleServer.getCurCursorYPos() - 1) + ");"
+                });
             }
-
+        }
     }
 
     static isNotDetectedOperation(): boolean {
