@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.5.3
+ * HmMarkdownSimpleServer v1.2.5.4
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -143,10 +143,11 @@ LAUNCH_MARKDOWN_SERVER:
     // 各種情報を基に、Markdownを簡易サーバーとして起動
     $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", 
     """""""""""""""""""""""""""""""""""""""""""""""""""""
-    <html>
+    <html lang="ja">
     <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
+    <style>div { word-break: auto-phrase; text-wrap: balance; }</style>
     <base href="$BASE_HREF">
     $MATHJAX_URL
     </head>
