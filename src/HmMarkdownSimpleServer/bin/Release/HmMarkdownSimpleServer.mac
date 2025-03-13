@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.5.4
+ * HmMarkdownSimpleServer v1.2.5.5
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -147,7 +147,7 @@ LAUNCH_MARKDOWN_SERVER:
     <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
-    <style>div { word-break: auto-phrase; text-wrap: balance; }</style>
+    <style>div { word-break: auto-phrase; }</style>
     <base href="$BASE_HREF">
     $MATHJAX_URL
     </head>
