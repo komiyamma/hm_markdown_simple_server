@@ -1,7 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.5.3
- *
+ * HmMarkdownSimpleServer v1.2.5.6
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
@@ -34,7 +33,7 @@ class HmMarkdownSimpleServer {
         // 前回のが残っているかもしれないので、止める
         HmMarkdownSimpleServer.stopIntervalTick(HmMarkdownSimpleServer.timerHandle);
         hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
-        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+        hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
     }
     // 初期化
     static initVariable() {
@@ -66,7 +65,7 @@ class HmMarkdownSimpleServer {
     static async initAsync() {
         hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
         let checkCount = 0;
-        function waitCopleteBrowser() {
+        let waitCopleteBrowser = () => {
             checkCount++;
             // なんか初期化されない模様。諦めた
             if (checkCount > 20) {
@@ -86,9 +85,9 @@ class HmMarkdownSimpleServer {
             HmMarkdownSimpleServer.tickMethodText();
             // Tick作成 (１秒間隔で実行)
             HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
-        }
+        };
         // コマンド実行したので、loadが完了するまで待つ
-        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 0);
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 200);
     }
     // Tick。
     static async tickMethodText() {
@@ -149,23 +148,25 @@ class HmMarkdownSimpleServer {
     static toScrollMethodTimerHandle = 0;
     // スクロールメソッドに移行するためTickトライ
     static tryToScrollMethod() {
-        hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+        hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
         let toScrollMethodTryCount = 0;
         let toScrollMethodTryFunc = () => {
             toScrollMethodTryCount++;
             if (toScrollMethodTryCount > 3) {
-                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+                hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+                return;
             }
             let status = browserpanecommand({
                 target: HmMarkdownSimpleServer.target_browser_pane,
                 get: "readyState"
             });
-            if (status == "complete") {
-                hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
-                HmMarkdownSimpleServer.tickMethodScroll();
+            if (status != "complete") {
+                HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setTimeout(toScrollMethodTryFunc, 200);
             }
+            hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
+            HmMarkdownSimpleServer.tickMethodScroll();
         };
-        HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setInterval(toScrollMethodTryFunc, 200);
+        HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setTimeout(toScrollMethodTryFunc, 200);
     }
     static tickMethodScroll() {
         // 時間が経過しているため、同じ判定を行う
