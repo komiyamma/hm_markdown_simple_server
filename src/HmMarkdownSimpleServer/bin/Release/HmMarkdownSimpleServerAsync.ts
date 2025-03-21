@@ -6,10 +6,11 @@
  * under the MIT License
  */
 
+var objHmMarkdownSimpleServer;
+
 // 前回のが残っていれば、クリア
-if (typeof (objHmMarkdownSimpleServer) != "undefined") {
-    objHmMarkdownSimpleServer._destructor();
-}
+objHmMarkdownSimpleServer?._destructor();
+
 
 class HmMarkdownSimpleServer {
     // ブラウザペインのターゲット。個別枠。
@@ -44,8 +45,8 @@ class HmMarkdownSimpleServer {
 
     _destructor(): void {
         // 前回のが残っているかもしれないので、止める
-        HmMarkdownSimpleServer.stopIntervalTick(HmMarkdownSimpleServer.timerHandle);
         hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
+        hidemaru.clearTimeout(HmMarkdownSimpleServer.timerHandle);
         hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
     }
 
@@ -64,24 +65,6 @@ class HmMarkdownSimpleServer {
 
         HmMarkdownSimpleServer.lastFileModified = 0;
         HmMarkdownSimpleServer.fso = null;
-    }
-
-    static timerHandle: number = 0;
-    // 基本、マクロを実行しなおす度にTickは一度クリア
-    static stopIntervalTick(timerHandle: number): void {
-        if (timerHandle) {
-            hidemaru.clearInterval(timerHandle);
-        }
-    }
-
-    // Tick作成。
-    static createIntervalTick(func): number {
-        return hidemaru.setInterval(func, HmMarkdownSimpleServer.tick_interval);
-    }
-
-    // sleep 相当。ECMAScript には sleep が無いので。
-    static sleep_in_tick(ms): Promise<void> {
-        return new Promise(resolve => hidemaru.setTimeout(resolve, ms));
     }
 
     static initTimerHandle: number = 0;
@@ -115,12 +98,14 @@ class HmMarkdownSimpleServer {
             HmMarkdownSimpleServer.tickMethodText();
 
             // Tick作成 (１秒間隔で実行)
-            HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
+            HmMarkdownSimpleServer.timerHandle = hidemaru.setTimeout(HmMarkdownSimpleServer.tickMethodText, HmMarkdownSimpleServer.tick_interval);
         }
 
         // コマンド実行したので、loadが完了するまで待つ
         HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 200);
     }
+
+    static timerHandle: number = 0;
 
     // Tick。
     static async tickMethodText(): Promise<void> {
@@ -191,6 +176,8 @@ class HmMarkdownSimpleServer {
             // エラーならアウトプット枠に
             let outdll = hidemaru.loadDll("HmOutputPane.dll");
             outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${e}\r\n`);
+        } finally {
+            HmMarkdownSimpleServer.timerHandle = hidemaru.setTimeout(HmMarkdownSimpleServer.tickMethodText, HmMarkdownSimpleServer.tick_interval);
         }
     }
 
@@ -464,16 +451,14 @@ class HmMarkdownSimpleServer {
 }
 
 try {
-    var objHmMarkdownSimpleServer = new HmMarkdownSimpleServer();
+    objHmMarkdownSimpleServer = new HmMarkdownSimpleServer();
 } catch (err) {
     // エラーならアウトプット枠に
     let outdll = hidemaru.loadDll("HmOutputPane.dll");
     outdll.dllFuncW.OutputW(hidemaru.getCurrentWindowHandle(), `${err}\r\n`);
 
     // タイマー残骸が残らないように
-    if (typeof (objHmMarkdownSimpleServer) != "undefined") {
-        objHmMarkdownSimpleServer._destructor();
-    }
+    objHmMarkdownSimpleServer?._destructor();
 }
 
 
