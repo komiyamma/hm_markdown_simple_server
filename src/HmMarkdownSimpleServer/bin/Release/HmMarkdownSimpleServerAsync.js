@@ -162,6 +162,7 @@ class HmMarkdownSimpleServer {
             });
             if (status != "complete") {
                 HmMarkdownSimpleServer.toScrollMethodTimerHandle = hidemaru.setTimeout(toScrollMethodTryFunc, 200);
+                return;
             }
             hidemaru.clearTimeout(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
             HmMarkdownSimpleServer.tickMethodScroll();
