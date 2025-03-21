@@ -47,6 +47,7 @@ class HmMarkdownSimpleServer {
     static async initAsync() {
         hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
         let checkCount = 0;
+        // loadが完了するまで待つ
         let waitCopleteBrowser = () => {
             checkCount++;
             // なんか初期化されない模様。諦めた
@@ -68,8 +69,8 @@ class HmMarkdownSimpleServer {
             // Tick作成 (１秒間隔で実行)
             HmMarkdownSimpleServer.timerHandle = hidemaru.setTimeout(HmMarkdownSimpleServer.tickMethodText, HmMarkdownSimpleServer.tick_interval);
         };
-        // コマンド実行したので、loadが完了するまで待つ
-        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 200);
+        // １回走らせる
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 0);
     }
     static timerHandle = 0;
     // Tick。
@@ -110,7 +111,7 @@ class HmMarkdownSimpleServer {
                     });
                 }
             }
-            // スクロールメソッドに移行するため、一度関数を抜ける。(待ちがわずかに発生すうるので関数から抜けて他のJSが処理できるようにする)
+            // スクロールメソッドに移行するため、一度関数を抜ける。(待ちがわずかに発生するので関数から抜けて他のJSが処理できるようにする)
             HmMarkdownSimpleServer.tryToScrollMethod();
         }
         catch (e) {

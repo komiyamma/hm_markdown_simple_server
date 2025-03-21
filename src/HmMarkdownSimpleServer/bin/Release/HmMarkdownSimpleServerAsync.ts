@@ -71,6 +71,7 @@ class HmMarkdownSimpleServer {
 
         let checkCount = 0;
 
+        // loadが完了するまで待つ
         let waitCopleteBrowser = () => {
             checkCount++;
             // なんか初期化されない模様。諦めた
@@ -98,8 +99,8 @@ class HmMarkdownSimpleServer {
             HmMarkdownSimpleServer.timerHandle = hidemaru.setTimeout(HmMarkdownSimpleServer.tickMethodText, HmMarkdownSimpleServer.tick_interval);
         }
 
-        // コマンド実行したので、loadが完了するまで待つ
-        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 200);
+        // １回走らせる
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 0);
     }
 
     static timerHandle: number = 0;
