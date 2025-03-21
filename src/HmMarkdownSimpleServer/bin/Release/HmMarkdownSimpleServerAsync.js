@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.5.6
+ * HmMarkdownSimpleServer v1.2.5.7
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
@@ -21,8 +21,6 @@ class HmMarkdownSimpleServer {
     static cursor_follow_mode = getVar('#CURSOR_FOLLOW_MODE');
     // 監視インターバル
     static tick_interval = 1000;
-    // 最後のチック
-    static last_ticktime = -9999;
     constructor() {
         // 初期化
         HmMarkdownSimpleServer.initVariable();
@@ -77,15 +75,6 @@ class HmMarkdownSimpleServer {
     // Tick。
     static async tickMethodText() {
         try {
-            // 本当にタイム差分が経過していることを担保
-            // する。これは setInterval系は、他関数がブロック的な処理だと、setInterval指定の関数の実行をキューでどんどん積んでいくことがあるため。
-            // そしてブロックが解放されたとたん、あわてて全部一気にキューが連続で実行されるようなことを避ける。
-            const tick_count = tickcount();
-            const diff_time = tick_count - HmMarkdownSimpleServer.last_ticktime;
-            if (diff_time < HmMarkdownSimpleServer.tick_interval) {
-                return;
-            }
-            HmMarkdownSimpleServer.last_ticktime = tick_count;
             // (他の)マクロ実行中は安全のため横槍にならないように何もしない。
             if (hidemaru.isMacroExecuting()) {
                 return;
