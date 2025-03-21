@@ -33,7 +33,7 @@ class HmMarkdownSimpleServer {
     _destructor() {
         // 前回のが残っているかもしれないので、止める
         HmMarkdownSimpleServer.stopIntervalTick(HmMarkdownSimpleServer.timerHandle);
-        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+        hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
         hidemaru.clearInterval(HmMarkdownSimpleServer.toScrollMethodTimerHandle);
     }
     // 初期化
@@ -64,29 +64,31 @@ class HmMarkdownSimpleServer {
     }
     static initTimerHandle = 0;
     static async initAsync() {
-        hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+        hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
         let checkCount = 0;
-        // コマンド実行したので、loadが完了するまで待つ
-        // 最大で2.0秒くらいまつ。仮に2.0秒経過してロードが完了しなかったとしても、IntervalTickが働いているので大丈夫
-        // この処理はあくまでも、最初の１回目の tickMethod を出来るだけ速いタイミングで当てるというだけのもの。
-        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setInterval(() => {
+        function waitCopleteBrowser() {
             checkCount++;
             // なんか初期化されない模様。諦めた
             if (checkCount > 20) {
-                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
+                hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
+                return;
             }
             let status = browserpanecommand({
                 target: HmMarkdownSimpleServer.target_browser_pane,
                 get: "readyState"
             });
-            if (status == "complete") {
-                hidemaru.clearInterval(HmMarkdownSimpleServer.initTimerHandle);
-                // １回走らせる
-                HmMarkdownSimpleServer.tickMethodText();
-                // Tick作成 (１秒間隔で実行)
-                HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
+            if (status != "complete") {
+                HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 200);
+                return;
             }
-        }, 200);
+            hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
+            // １回走らせる
+            HmMarkdownSimpleServer.tickMethodText();
+            // Tick作成 (１秒間隔で実行)
+            HmMarkdownSimpleServer.timerHandle = HmMarkdownSimpleServer.createIntervalTick(HmMarkdownSimpleServer.tickMethodText);
+        }
+        // コマンド実行したので、loadが完了するまで待つ
+        HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 0);
     }
     // Tick。
     static async tickMethodText() {
