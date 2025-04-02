@@ -47,7 +47,7 @@ public class HmMarkdownSimpleServer
 
     int is_use_external_link_target_blank = 0;
 
-    int funcid = 0;
+    string fontname = "";
 
     int port = 0;
 
@@ -67,6 +67,7 @@ public class HmMarkdownSimpleServer
             is_use_math_jax = (int)(dynamic)Hm.Macro.Var["#IS_USE_MATHJAX"];
             is_use_external_link_target_blank = (int)(dynamic)Hm.Macro.Var["#IS_USE_EXTERNAL_LINK_TARGET_BLANK"];
             port = (int)(dynamic)Hm.Macro.Var["#PORT"];
+            fontname = (string)Hm.Macro.Var["fontname"];
 
             string tempFileFullPath = GetTemporaryFileName();
             prevFileFullPath = Hm.Edit.FilePath ?? "";
@@ -278,6 +279,7 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$HTML", markdown_html);
             html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank.ToString());
             html = html.Replace("$PORT", port.ToString());
+            html = html.Replace("$FONTNAME", fontname);
 
             if (is_use_math_jax > 0)
             {
