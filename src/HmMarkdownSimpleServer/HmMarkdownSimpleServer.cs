@@ -209,6 +209,13 @@ public class HmMarkdownSimpleServer
                     return true;
                 }
 
+                int currentWindowBackGround = Hm.Edit.InputStates & 0x00000800;
+                // 自分のウィンドウはタブモードでかつ裏に隠れているか？
+                if (currentWindowBackGround > 0)
+                {
+                    continue;
+                }
+
                 // ファイル名が変化したら、改めて自分自身のマクロを実行する。
                 if (prevFileFullPath != currFileFullPath)
                 {
@@ -300,16 +307,7 @@ public class HmMarkdownSimpleServer
 
     private static async Task<CancellationToken> DelayMethod(CancellationToken ct)
     {
-        int currentWindowBackGround = Hm.Edit.InputStates & 0x00000800;
-        // 自分のウィンドウはタブモードでかつ裏に隠れているか？
-        if (currentWindowBackGround > 0)
-        {
-            await Task.Delay(700, ct);
-        }
-        else
-        {
-            await Task.Delay(150, ct);
-        }
+        await Task.Delay(150, ct);
 
         if (ct.IsCancellationRequested)
         {
