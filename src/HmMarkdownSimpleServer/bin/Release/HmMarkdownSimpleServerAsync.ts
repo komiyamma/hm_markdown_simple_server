@@ -1,7 +1,7 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.5.7
+ * HmMarkdownSimpleServer v1.2.5.8
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
@@ -298,7 +298,7 @@ class HmMarkdownSimpleServer {
         const notAllowedMask = 
               0x00000004 | 0x00000008 | 0x00000010 | 
               0x00000200 | 0x00000400 | 0x00000800 | 
-              0x00001000 | 0x00020000;
+              0x00001000 | 0x00020000 | 0x00080000;
 
         return (s & notAllowedMask) != 0;
     }
