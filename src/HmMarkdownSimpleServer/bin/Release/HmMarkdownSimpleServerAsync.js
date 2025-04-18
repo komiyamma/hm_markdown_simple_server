@@ -1,6 +1,6 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 /*
- * HmMarkdownSimpleServer v1.2.5.8
+ * HmMarkdownSimpleServer v1.2.5.9
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
@@ -53,6 +53,10 @@ class HmMarkdownSimpleServer {
             // なんか初期化されない模様。諦めた
             if (checkCount > 20) {
                 hidemaru.clearTimeout(HmMarkdownSimpleServer.initTimerHandle);
+                return;
+            }
+            if (HmMarkdownSimpleServer.isNotDetectedOperation()) {
+                HmMarkdownSimpleServer.initTimerHandle = hidemaru.setTimeout(waitCopleteBrowser, 500);
                 return;
             }
             let status = browserpanecommand({
