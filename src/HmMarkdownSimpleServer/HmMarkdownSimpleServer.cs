@@ -252,7 +252,7 @@ public class HmMarkdownSimpleServer
             string markdowntext = File.ReadAllText(currFileFullPath);
 
             var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
-            
+
             string markdown_html = Markdig.Markdown.ToHtml(markdowntext, pipeLine);
             string tempFileFullPath = GetTemporaryFileName();
             string baseDirWin = Path.GetDirectoryName(currFileFullPath);
@@ -300,7 +300,17 @@ public class HmMarkdownSimpleServer
 
     private static async Task<CancellationToken> DelayMethod(CancellationToken ct)
     {
-        await Task.Delay(150, ct);
+        int currentWindowBackGround = Hm.Edit.InputStates & 0x00000800;
+        // 自分のウィンドウはタブモードでかつ裏に隠れているか？
+        if (currentWindowBackGround > 0)
+        {
+            await Task.Delay(700, ct);
+        }
+        else
+        {
+            await Task.Delay(150, ct);
+        }
+
         if (ct.IsCancellationRequested)
         {
             // Clean up here, then...
