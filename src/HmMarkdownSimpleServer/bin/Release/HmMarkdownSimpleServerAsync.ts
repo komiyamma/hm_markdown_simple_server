@@ -1,7 +1,7 @@
 /// <reference path="types/hm_jsmode.d.ts" />
 
 /*
- * HmMarkdownSimpleServer v1.2.5.9
+ * HmMarkdownSimpleServer v1.2.6.0
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
  */
@@ -298,12 +298,15 @@ class HmMarkdownSimpleServer {
         ○ 0x00010000 何かマウスのボタンを押している
         × 0x00020000 マウスキャプチャ状態(ドラッグ状態)
         ○ 0x00040000 Hidemaru_CheckQueueStatus相当
+        × 0x00080000 デスクトップ復元中
+        × 0x00200000 操作していない秀丸ウィンドウ
         */
         let s = hidemaru.getInputStates();
         const notAllowedMask = 
               0x00000004 | 0x00000008 | 0x00000010 | 
               0x00000200 | 0x00000400 | 0x00000800 | 
-              0x00001000 | 0x00020000 | 0x00080000;
+              0x00001000 | 0x00020000 | 0x00080000 | 
+              0x00200000;
 
         return (s & notAllowedMask) != 0;
     }

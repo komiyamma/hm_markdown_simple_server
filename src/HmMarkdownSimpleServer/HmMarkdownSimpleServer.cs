@@ -197,12 +197,13 @@ public class HmMarkdownSimpleServer
             ◯ 0x00020000 マウスキャプチャ状態(ドラッグ状態)
             ◯ 0x00040000 Hidemaru_CheckQueueStatus相当
             × 0x00080000 デスクトップ復元中（V9.46以降）
+            × 0x00200000 操作していない秀丸ウィンドウ
         */
 
         int states = Hm.Edit.InputStates;
 
         const int notAllowedMask =
-              0x00000200 | 0x00000400 | 0x00000800 | 0x00001000 | 0x00080000;
+              0x00000200 | 0x00000400 | 0x00000800 | 0x00001000 | 0x00080000 | 0x00200000;
 
         return (states & notAllowedMask) != 0;
     }
