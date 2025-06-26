@@ -1,0 +1,367 @@
+﻿/*
+ * HmMarkdownSimpleServer v1.2.8.1
+ *
+ * Copyright (c) 2023-2025 Akitsugu Komiyama
+ * under the MIT License
+ */
+
+hidemaruversion "9.35.99";
+
+
+setcompatiblemode 0x08000000; // マクロ内変数を他と共用しない。
+
+
+SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
+
+    #REALTIME_MODE_TEXT_LENGTH_MAX = 50000; // 50000文字まではリアルタイムでブラウザ枠追従モードを維持する。それを超えるとファイル保存時のみの更新。
+
+    #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
+
+    #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
+
+    #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 2;
+    // 0:秀丸の内部ブラウザ枠
+    // 1:秀丸の外部ブラウザ枠(オープン確認あり)
+    // 2:Windows登録のデフォルトブラウザ(オープン確認なし)
+
+RELEASE_OLD_MARKDOWN_SERVER_OBJECT:
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を取り出す
+    $LAST_MARKDOWN_SERVER_COM = getstaticvariable("HmMarkdownSimpleServerLastObj", 2);
+
+    // 有効な値があるならば...
+    if ($LAST_MARKDOWN_SERVER_COM != "") {
+        #LAST_MARKDOWN_SERVER_COM = val($LAST_MARKDOWN_SERVER_COM); // 文字列の数字 ⇒ 数値へ
+
+        // 該当の値をToStringして本当に「HmMarkdownSimpleServer」のオブジェクトか確認する。
+        // .NET で制作しているものはすべてのオブジェクトがToStringを持つ、それは「名前空間.クラス名」なのでこのような判定が出来る。
+        $OBJ_CLASS_NAME = member(#LAST_MARKDOWN_SERVER_COM, "ToString");
+        if ($OBJ_CLASS_NAME == "HmMarkdownSimpleServer.HmMarkdownSimpleServer") {
+            releaseobject(#LAST_MARKDOWN_SERVER_COM); // HmMarkdownSimpleServer.HmMarkdownSimpleServer 内の「OnReleaseObject」も実行される。
+        }
+    }
+
+
+RELEASE_OLD_FETCH_SERVER_OBJECT:
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を取り出す
+    $LAST_FETCH_SERVER_COM = getstaticvariable("HmMarkdownFetchServerLastObj", 2);
+
+    // 有効な値があるならば...
+    if ($LAST_FETCH_SERVER_COM != "") {
+        #LAST_FETCH_SERVER_COM = val($LAST_FETCH_SERVER_COM); // 文字列の数字 ⇒ 数値へ
+
+        // 該当の値をToStringして本当に「HmMarkdownListeningServer」のオブジェクトか確認する。
+        // .NET で制作しているものはすべてのオブジェクトがToStringを持つ、それは「名前空間.クラス名」なのでこのような判定が出来る。
+        $OBJ_CLASS_NAME = member(#LAST_FETCH_SERVER_COM, "ToString");
+        if ($OBJ_CLASS_NAME == "HmMarkdownSimpleServer.HmMarkdownListeningServer") {
+            releaseobject(#LAST_FETCH_SERVER_COM); // HmMarkdownSimpleServer.HmMarkdownListeningServer 内の「OnReleaseObject」も実行される。
+        }
+    }
+
+
+EXIT_IF_FILENAME_IS_EMPTY:
+
+    // 無題なら何もしない。マクロの一番先頭ではなく、この位置にある理由は、
+    // 「１つ前に使っていたMarkdownサーバーオブジェクトの破棄」はしておきたいため、
+    if (filename2 == "") {
+        endmacro;
+    }
+
+
+CREATE_MARKDOWN_SERVER_OBJECT:
+
+    // Markdownサーバー関連オブジェクトの生成。秀丸のファイル名変更や、ファイル保存による更新、Markdownサーバーのプロセスオブジェクトを管理する。
+    #MARKDOWN_SERVER_COM = createobject( currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownSimpleServer");
+
+    // 「この秀丸プロセス」内でのオブジェクト番号を記憶しておく
+    setstaticvariable "HmMarkdownSimpleServerLastObj", str(#MARKDOWN_SERVER_COM), 2; // 
+
+    // マクロが終了してもオブジェクトは維持。シングルトンにするため、マクロの「CLEAR_OLD_MARKDOWN_SERVER_OBJECT:」で古い起動は掃除している。
+    keepobject #MARKDOWN_SERVER_COM, 1;
+
+    // 掃除される際(releaseobjectやプロセスを閉じた、何か秀丸レベルで致命的マクロエラーとなった際)に呼び出される
+    setcomdetachmethod #MARKDOWN_SERVER_COM, "OnReleaseObject";
+
+
+
+CREATE_MARKDOWN_FETCH_SERVER_OBJECT:
+
+    #FETCH_SERVER = createobject(currentmacrodirectory + @"\HmMarkdownSimpleServer.dll", "HmMarkdownSimpleServer.HmMarkdownListeningServer");
+
+    setstaticvariable "HmMarkdownFetchServerLastObj", str(#FETCH_SERVER), 2; // 
+
+    keepobject #FETCH_SERVER, 1;
+
+    setcomdetachmethod #FETCH_SERVER, "OnReleaseObject";
+
+
+FIND_MARKDOWN_FETCH_SERVER_AVILABLE_PORT:
+
+    #BGN_PORT = 7101;                     // サーバー用に利用する 最低のポート番号
+    #END_PORT = 7200;                     // サーバー用に利用する 最大のポート番号。 最低でも50ポート幅は用意すること。
+
+    // 全秀丸共有で#MARKDOWN_HOSTPORTを持つ。１つずつインクリメントで「全秀丸プロセス」でユニークとし、まずは被りにくいようにする
+    $STR_PORT = getstaticvariable("HmMarkdownFetchServerLastPort", 1);
+
+    // 初回起動時は、#BGN_PORT を「かぶりにくい番号」とする。
+    if ($STR_PORT == "") {
+
+        #MARKDOWN_HOSTPORT = #BGN_PORT;
+
+    // 最後に起動した際のポート番号に1足したものを「被りにくい番号」とする。
+    } else {
+        #MARKDOWN_HOSTPORT = val($STR_PORT);
+
+        // 予め１ずつずらしているのは、「本当に使われていない」という判定はどうあってもOSに訪ねたとしても完璧にはならないため、
+        // 最低１ずつずらしていくことで、次に行う「本当に使われていないPort番号」の探索が「万が一」誤っていたとしても、Port番号が変わることにより問題なく動作する可能性が十分あるため。
+        #MARKDOWN_HOSTPORT = #MARKDOWN_HOSTPORT + 1;
+
+        // 指定のPort範囲外に溢れていたら、一番小さなPortから
+        if (#MARKDOWN_HOSTPORT < #BGN_PORT || #END_PORT-20 < #MARKDOWN_HOSTPORT) {
+            #MARKDOWN_HOSTPORT = #BGN_PORT;
+        }
+    }
+
+    setstaticvariable "HmMarkdownFetchServerLastPort", str(#MARKDOWN_HOSTPORT), 1;
+
+
+LAUNCH_MARKDOWN_FETCH_SERVER:
+
+    #PORT = member(#FETCH_SERVER, "Start",  #MARKDOWN_HOSTPORT, #END_PORT);
+
+    if (#PORT == 0) {
+        message("ポート番号に空きがありません。\n#BGN_PORT と #END_PORT の範囲を広げて下さい。");
+        // エラーメッセージは、COMのdllの方からアウトプット枠にすでに出てる。
+        endmacro;
+    }
+
+
+
+LAUNCH_MARKDOWN_SERVER:
+
+    // 各種情報を基に、Markdownを簡易サーバーとして起動
+    $ABSOLUTE_URI = member(#MARKDOWN_SERVER_COM, "Launch", 
+    """""""""""""""""""""""""""""""""""""""""""""""""""""
+    <html lang="ja">
+    <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
+    <script src="$MERMAID_URI_ABSOLUTE"></script>
+    <style>body.markdown-body { font-family: "$FONTNAME",Meiryo,"MS PGothic"; }</style>
+    <base href="$BASE_HREF">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    $MATHJAX_URL
+    </head>
+    <body class="markdown-body">
+    $MATHJAX_CONFIG
+    <script>
+    mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
+    // ブラウザ枠表示の直後は、1.5秒ほどは安定しない上、直後にユーザーがブラウザ枠で操作すると、制御が喧嘩しやすいので、特別なホットタイムを設ける。
+    let HmMarkdownSimpleServer_DOMContentLoadedHotTiming = true;
+    document.addEventListener('DOMContentLoaded', () => {
+        // HmMarkdownSimpleServer_updateAHrefTarget();
+        setTimeout(()=>{HmMarkdownSimpleServer_DOMContentLoadedHotTiming = false;}, 1500);
+    });
+
+    // ブラウザ枠表示の直後に、ユーザー操作でクリックした場合は、マクロからの座標強制移動を取り下げることで、「制御が喧嘩してる感」を抑制する
+    let HmMarkdownSimpleServer_clickHotTiming = false;
+    let HmMarkdownSimpleServer_clickHotTimingTimerHandle = 0;
+    function startClickHotTiming() {
+        if (!HmMarkdownSimpleServer_DOMContentLoadedHotTiming) {
+            return;
+        }
+        // リンクを操作した直後に再度リンクを操作することもあるので、多回数押しても破綻しないように
+        HmMarkdownSimpleServer_clickHotTiming = true;
+        if (HmMarkdownSimpleServer_clickHotTimingTimerHandle) {
+            clearTimeout(HmMarkdownSimpleServer_clickHotTimingTimerHandle);
+        }
+        HmMarkdownSimpleServer_clickHotTimingTimerHandle = setTimeout(()=>{
+            HmMarkdownSimpleServer_clickHotTiming = false;
+        }, 1000);
+    }
+
+    document.addEventListener('click', (event) => {
+        try {
+            // クリックされた要素が <a> タグかどうかを確認
+            const link = event.target.closest('a[href]');
+
+            if (link) {
+                HmMarkdownSimpleServer_checkCustomLink(link, event);
+            }
+        } catch (e) {
+        }
+    });
+
+    function HmMarkdownSimpleServer_checkCustomLink(link, event) {
+        try {
+            const href = link.getAttribute('href');
+            const target = link.getAttribute('target');
+            // リンクがhttpから始まっている
+            if (href && href.startsWith('http')) {
+                // 秀丸の外部ブラウザ枠で開く。
+                if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 1) {
+                    event.preventDefault();
+                    window.open(href, '_blank');
+                }
+                // Windows登録のデフォルトブラウザで開く。(通常はユーザーが普段使っているブラウザ)
+                else if ($IS_USE_EXTERNAL_LINK_TARGET_BLANK == 2) {
+                    if (HmMarkdownSimpleServer_port) {
+                        event.preventDefault();
+                        HmMarkdownSimpleServer_openExternalBrowser(href, target);
+                    } else {
+                        event.preventDefault();
+                        window.open(href, '_blank');
+                    }
+                }
+            }
+            // ページ内リンクである
+            else if (href && href.startsWith('#')) {
+                event.preventDefault();  // ページの遷移を防ぎ、
+                // 自前で移動。fileプロトコルと日本語を含めた自動アンカーで綺麗にジャンプするのは色々と無理がある気が...
+                const link_id = href.replace("#", "");
+                // まずurlencodeが入ってないキレイな状態なら、そのままのidがあるかもしれない
+                const elem = document.getElementById(link_id);
+                if (elem) {
+                    elem.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    startClickHotTiming();
+                    return;
+                }
+
+                // urlエンコードが入っているが、urlエンコードがちゃんと入ったidをわざわざ用意しているかもしれない。
+                const link_decode = decodeURIComponent(link_id);
+                const elem_decode = document.getElementById(link_decode);
+                if (elem_decode) {
+                    elem_decode.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                    startClickHotTiming();
+                    return;
+                }
+
+                // もはやヘッダーの中身のテキストが、リンクをデコードしたものと同じであれば、そこに飛ぶべきだ
+                const headers = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                for (const header of headers) {
+                    if (link_decode === header.textContent) {
+                        header.scrollIntoView({ behavior: "auto", block: "start", inline: "start" });
+                        startClickHotTiming();
+                        break;
+                    }
+                } 
+            }
+
+        } catch (e) {
+        }
+    }
+
+    function HmMarkdownSimpleServer_openExternalBrowser(href, target) {
+        try {
+            if (HmMarkdownSimpleServer_port) {
+                fetch("http://localhost:" + HmMarkdownSimpleServer_port +"/" + encodeURIComponent(href))
+                .catch(error => {
+                    window.open(href, target);
+                });
+            }
+        } catch (e) {
+            window.alert(e);
+        }
+    }
+
+    function HmMarkdownSimpleServer_scollToPagePos(pos_lineno) {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
+        try {
+            if (pos_lineno <= 1) {
+                return;
+            }
+            const pragma_line_id = "pragma-line-" + pos_lineno;
+
+            const elem = document.getElementById(pragma_line_id);
+            if (elem) {
+                elem.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" });
+            }
+        } catch (e) {
+        }
+    }
+    function HmMarkdownSimpleServer_scollToPageBgn() {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
+        try {
+            if (window.pageXOffset === 0 && window.pageYOffset === 0) {
+                ; // すでに先頭。何もしない。
+            } else {
+                scrollTo(0, 0);
+            }
+        } catch (e) {
+        }
+    }
+    function HmMarkdownSimpleServer_scollToPageEnd() {
+        if (HmMarkdownSimpleServer_clickHotTiming) { return; }
+        try {
+            const elem = document.getElementById("hm-pragma-line-end");
+            if (elem) {
+                elem.scrollIntoView({ behavior: "auto", block: "center", inline: "start" });
+            }
+        } catch (e) {
+        }
+    }
+
+    var HmMarkdownSimpleServer_port = $PORT;
+    function HmMarkdownSimpleServer_updateFetch(port) {
+        HmMarkdownSimpleServer_port = port;
+        try {
+            fetch("http://localhost:" + port + "/gettotaltext" )
+                .then(response => response.text())
+                .then(data => {
+                    let panel = document.getElementById("update_panel");
+                    let new_html = data.toString();
+                    if (panel.innerHTML != new_html) {
+                        panel.innerHTML = new_html;
+                        
+                        if ($IS_USE_MATHJAX) {
+                            MathJax.startup.promise.then(() => {
+                                if (MathJax.typesetClear) MathJax.typesetClear([update_panel]);
+                                return MathJax.typesetPromise([update_panel]);
+                            });
+                        }
+
+                        const mermaidElements = update_panel.querySelectorAll('.mermaid');
+                        if (mermaidElements.length > 0) {
+                            mermaid.run({ nodes: mermaidElements });
+                        }
+                    }
+                })
+                .catch(error => {
+                });
+        } catch (e) {
+        }
+    }
+    </script>
+    <div id="update_panel">$HTML</div>
+    <br>
+    <div id="hm-pragma-line-end"></div>
+    </body>
+    </html>
+    """""""""""""""""""""""""""""""""""""""""""""""""""""
+    );
+
+
+
+
+// この段階で先に表示しておくとかなり速い
+SHOW_BROWSERPANE_URL:
+
+    $TARGET_BROWSER_PANE = "_each";
+    showbrowserpane 1, $TARGET_BROWSER_PANE;
+    setbrowserpaneurl $ABSOLUTE_URI, $TARGET_BROWSER_PANE;
+
+
+EXECUTE_MARKDOWN_SERVER_JS_ASYNC:
+
+    jsmode "WebView2\\HmMarkdownSimpleServer";
+    execjs currentmacrodirectory + @"\HmMarkdownSimpleServerAsync.js";
