@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.6.0
+ * HmMarkdownSimpleServer v1.2.8.1
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -147,17 +147,29 @@ LAUNCH_MARKDOWN_SERVER:
     <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="$CSS_URI_ABSOLUTE">
+    <script src="$MERMAID_URI_ABSOLUTE"></script>
     <style>body.markdown-body { font-family: "$FONTNAME",Meiryo,"MS PGothic"; }</style>
     <base href="$BASE_HREF">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
     $MATHJAX_URL
     </head>
     <body class="markdown-body">
     $MATHJAX_CONFIG
     <script>
+    mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
     // ブラウザ枠表示の直後は、1.5秒ほどは安定しない上、直後にユーザーがブラウザ枠で操作すると、制御が喧嘩しやすいので、特別なホットタイムを設ける。
     let HmMarkdownSimpleServer_DOMContentLoadedHotTiming = true;
     document.addEventListener('DOMContentLoaded', () => {
-        HmMarkdownSimpleServer_updateAHrefTarget();
+        // HmMarkdownSimpleServer_updateAHrefTarget();
         setTimeout(()=>{HmMarkdownSimpleServer_DOMContentLoadedHotTiming = false;}, 1500);
     });
 
@@ -310,9 +322,17 @@ LAUNCH_MARKDOWN_SERVER:
                     let new_html = data.toString();
                     if (panel.innerHTML != new_html) {
                         panel.innerHTML = new_html;
+                        
                         if ($IS_USE_MATHJAX) {
-                            let math = document.getElementsByClassName("math");
-                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, math]);
+                            MathJax.startup.promise.then(() => {
+                                if (MathJax.typesetClear) MathJax.typesetClear([update_panel]);
+                                return MathJax.typesetPromise([update_panel]);
+                            });
+                        }
+
+                        const mermaidElements = update_panel.querySelectorAll('.mermaid');
+                        if (mermaidElements.length > 0) {
+                            mermaid.run({ nodes: mermaidElements });
                         }
                     }
                 })

@@ -39,6 +39,8 @@ public class HmMarkdownSimpleServer
 
     string strPathCSSWin = "";
 
+    string strPathMermaidWin = "";
+
     int darkmode = 0;
 
     string html_template = "";
@@ -309,8 +311,19 @@ public class HmMarkdownSimpleServer
             }
             cssHref = new Uri(strPathCSSWin).AbsoluteUri;
 
+            string mermaidSrc = "";
+            if (String.IsNullOrEmpty(strPathMermaidWin))
+            {
+                string thisDllDirWin = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                strPathMermaidWin = thisDllDirWin + "\\HmMarkdownSimpleServerMermaid.js";
+
+            }
+            mermaidSrc = new Uri(strPathMermaidWin).AbsoluteUri;
+
+
             var html = html_template;
             html = html.Replace("$CSS_URI_ABSOLUTE", cssHref);
+            html = html.Replace("$MERMAID_URI_ABSOLUTE", mermaidSrc);
             html = html.Replace("$BASE_HREF", baseHref + "/"); // この「/」を末尾に付けるのは絶対必須
             html = html.Replace("$HTML", markdown_html);
             html = html.Replace("$IS_USE_EXTERNAL_LINK_TARGET_BLANK", is_use_external_link_target_blank.ToString());
@@ -319,7 +332,7 @@ public class HmMarkdownSimpleServer
 
             if (is_use_math_jax > 0)
             {
-                html = html.Replace("$MATHJAX_URL", """<script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>""");
+                html = html.Replace("$MATHJAX_URL", """<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>""");
                 html = html.Replace("$MATHJAX_CONFIG", """<script type="text/x-mathjax-config">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
                 html = html.Replace("$IS_USE_MATHJAX", "1");
             }

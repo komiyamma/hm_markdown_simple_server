@@ -76,3 +76,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   https://github.com/sindresorhus/github-markdown-css
   The minimal amount of CSS to replicate the GitHub Markdown style
   Licensed: MIT Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+
+
+
+- HmMarkdownSimpleServerMermaid.js
+
+  original filename is mermaid.js
+
+  https://github.com/mermaid-js/mermaid
+  Licensed: MIT Copyright (c) 2014 - 2025 Knut Sveidqvist
