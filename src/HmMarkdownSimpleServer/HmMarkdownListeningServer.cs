@@ -73,8 +73,18 @@ public class HmMarkdownListeningServer
     {
         try
         {
+
             string markdown = Hm.Edit.TotalText ?? "";
-            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+
+            MarkdownPipeline pipeLine = null;
+            //if (HmMarkdownSimpleServer.is_use_math_jax > 0) {
+            //    pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().UseMathematics().Build();
+            //}
+            //else
+            //{
+            pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            //}
+
             string html = Markdig.Markdown.ToHtml(markdown, pipeLine);
             return html;
         }

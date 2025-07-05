@@ -289,7 +289,15 @@ public class HmMarkdownSimpleServer
         {
             string markdowntext = File.ReadAllText(currFileFullPath);
 
-            var pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            MarkdownPipeline pipeLine = null;
+            //if (is_use_math_jax > 0)
+            //{
+            //pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            //}
+            //else
+            //{
+            pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
+            //}
 
             string markdown_html = Markdig.Markdown.ToHtml(markdowntext, pipeLine);
             string tempFileFullPath = GetTemporaryFileName();
