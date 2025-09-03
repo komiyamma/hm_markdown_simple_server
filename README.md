@@ -79,3 +79,7 @@
 *   **.NET Framework**: 4.7.2
 
 [リポジトリのクローン](https://github.com/komiyamma/hm_markdown_simple_server.git)後、Visual Studioでソリューションファイルを開き、ビルドを実行してください。
+
+## 解説サイト
+
+[https://秀丸マクロ.net/?page=nobu_tool_hm_markdown_simple_server](https://秀丸マクロ.net/?page=nobu_tool_hm_markdown_simple_server)
