@@ -1,5 +1,5 @@
 ﻿/*
- * HmMarkdownSimpleServer v1.2.8.2
+ * HmMarkdownSimpleServer v1.2.9.1
  *
  * Copyright (c) 2023-2025 Akitsugu Komiyama
  * under the MIT License
@@ -18,6 +18,8 @@ SET_PARAMS_OF_HM_MARKDOWN_SIMPLE_SERVER:
     #CURSOR_FOLLOW_MODE = 1; // カーソルの位置に合わせてブラウザ枠も追従する
 
     #IS_USE_MATHJAX = 0;     // 数式表現の MathJax を使うかどうか。
+    
+    $MATHJAX_URL = "<script src='https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js'></script>";
 
     #IS_USE_EXTERNAL_LINK_TARGET_BLANK = 2;
     // 0:秀丸の内部ブラウザ枠
@@ -163,7 +165,7 @@ LAUNCH_MARKDOWN_SERVER:
     $MATHJAX_URL
     </head>
     <body class="markdown-body">
-    $MATHJAX_CONFIG
+    <script type="text/x-mathjax-config">MathJax?.Hub?.Config({ messageStyle: 'none' });</script>
     <script>
     mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
     // ブラウザ枠表示の直後は、1.5秒ほどは安定しない上、直後にユーザーがブラウザ枠で操作すると、制御が喧嘩しやすいので、特別なホットタイムを設ける。

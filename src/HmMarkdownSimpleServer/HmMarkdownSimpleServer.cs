@@ -43,6 +43,8 @@ public class HmMarkdownSimpleServer
 
     int is_use_external_link_target_blank = 0;
 
+    string str_mathjax_url = "";
+
     string fontname = "";
 
     int port = 0;
@@ -64,6 +66,7 @@ public class HmMarkdownSimpleServer
             is_use_external_link_target_blank = (int)(dynamic)Hm.Macro.Var["#IS_USE_EXTERNAL_LINK_TARGET_BLANK"];
             port = (int)(dynamic)Hm.Macro.Var["#PORT"];
             fontname = (string)Hm.Macro.Var["fontname"];
+            str_mathjax_url = (string)Hm.Macro.Var["$MATHJAX_URL"];
 
             string tempFileFullPath = GetTemporaryFileName();
             prevFileFullPath = Hm.Edit.FilePath ?? "";
@@ -318,16 +321,14 @@ public class HmMarkdownSimpleServer
             html = html.Replace("$PORT", port.ToString());
             html = html.Replace("$FONTNAME", fontname);
 
-            if (is_use_math_jax > 0)
+            if (is_use_math_jax > 0 && str_mathjax_url.Length > 0)
             {
-                html = html.Replace("$MATHJAX_URL", """<script src=\"https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js\"></script>""");
-                html = html.Replace("$MATHJAX_CONFIG", """<script type=\"text/x-mathjax-config\">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
+                html = html.Replace("$MATHJAX_URL", str_mathjax_url);
                 html = html.Replace("$IS_USE_MATHJAX", "1");
             }
             else
             {
                 html = html.Replace("$MATHJAX_URL", "");
-                html = html.Replace("$MATHJAX_CONFIG", "");
                 html = html.Replace("$IS_USE_MATHJAX", "0");
             }
             File.WriteAllText(tempFileFullPath, html);
