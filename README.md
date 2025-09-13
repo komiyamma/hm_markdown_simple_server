@@ -1,6 +1,6 @@
 # HmMarkdownSimpleServer
 
-![HmMarkdownSimpleServer latest release](https://img.shields.io/github/v/release/komiyamma/hm_markdown_simple_render)
+![HmMarkdownSimpleServer latest release](https://img.shields.io/github/v/release/komiyamma/hm_markdown_simple_server)
 [![MIT & BSD2](https://img.shields.io/badge/license-MIT_&_BSD2-blue.svg?style=flat)](LICENSE)
 ![Hidemaru 9.35+](https://img.shields.io/badge/Hidemaru-v9.35+-6479ff.svg)
 ![.NET 4.72](https://img.shields.io/badge/.NET-4.72-6479ff.svg)
