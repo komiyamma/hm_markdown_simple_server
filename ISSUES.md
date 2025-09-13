@@ -1,32 +1,21 @@
-# HmMarkdownSimpleServerの潜在的な問題点
+# HmMarkdownSimpleServerの潜在的な問題点 (2024-09-13更新)
 
 このドキュメントは、`HmMarkdownSimpleServer` プロジェクトのコードベースを静的に分析した結果、発見された潜在的な問題点や改善点をまとめたものです。
 
 ---
 
-## 1. ライブラリと依存関係 (Libraries and Dependencies)
+## 1. 依存関係の問題 (Libraries and Dependencies)
 
 ### 1.1. Markdigライブラリのバージョンが古い
 
 - **問題点**:
-  Markdownのパースに使用している `Markdig` ライブラリのバージョンが `0.18.1` (2019年リリース) と非常に古いです。現在の最新版は `0.41.3` (2024年リリース) であり、メジャーバージョンが大きく異なります。
+  Markdownのパースに使用している `Markdig` ライブラリのバージョンが `0.18.1` (2019年リリース) と非常に古いです。最新版は常に更新されており、メジャーバージョンも大きく異なります。
 - **影響**:
   - 最新のGFM (GitHub Flavored Markdown) の仕様に追従できていない可能性があります。
   - パフォーマンスの改善、バグ修正、セキュリティ修正の恩恵を受けられません。
   - 新しい拡張機能（ डायアグラム、数式サポートの改善など）が利用できません。
 - **該当箇所**:
   - `src/HmMarkdownSimpleServer/packages.config`
-
-### 1.2. MathJaxのURLがハードコードされている
-
-- **問題点**:
-  数式表示ライブラリであるMathJaxを、特定のバージョンのCDN URL (`https://cdn.jsdelivr.net/npm/mathjax@3.2.2/...`) でハードコードして読み込んでいます。
-- **影響**:
-  - ユーザーがオフライン環境の場合、数式が表示されません。
-  - CDNサービスで障害が発生した場合や、URLが変更された場合に機能しなくなります。
-  - ライブラリをプロジェクトに同梱するか、URLを設定可能にすることが望ましいです。
-- **該当箇所**:
-  - `src/HmMarkdownSimpleServer/HmMarkdownSimpleServer.cs`
 
 ---
 
@@ -42,18 +31,7 @@
 - **該当箇所**:
   - `HmMarkdownSimpleServer.cs`, `HmMarkdownListeningServer.cs` など、プロジェクト全体。
 
-### 2.2. コードの重複
-
-- **問題点**:
-  `HmMarkdownSimpleServer.cs`（保存時の処理）と `HmMarkdownListeningServer.cs`（リアルタイムプレビューの処理）の両方で、それぞれ `Markdig` の変換パイプラインを生成するロジックが重複して記述されています。
-- **影響**:
-  - Markdownの変換設定を変更する際に、複数の箇所を修正する必要があり、修正漏れのリスクがあります。
-  - 保守性が低下します。
-- **該当箇所**:
-  - `CreateTempFile` メソッド (`HmMarkdownSimpleServer.cs`)
-  - `GetTotalText` メソッド (`HmMarkdownListeningServer.cs`)
-
-### 2.3. 非効率な非同期処理
+### 2.2. 非効率な非同期処理
 
 - **問題点**:
   `HmMarkdownSimpleServer.cs` 内の `TickMethodAsync` は、約450msごとに秀丸エディタの状態をポーリング（定期監視）しており、CPUリソースを非効率に消費します。
@@ -62,6 +40,17 @@
   - `FileSystemWatcher` を利用しているにもかかわらず、ファイル切り替えの検知のためにポーリングループが存在しており、設計が複雑化しています。
 - **該当箇所**:
   - `TickMethodAsync` メソッド (`HmMarkdownSimpleServer.cs`)
+
+### 2.3. コードの重複（改善されたが、依然として残存）
+
+- **問題点**:
+  `Markdig` の変換パイプラインを生成するロジックは `MarkdownPipelineProvider.cs` に一元化され、以前の重複状態は改善されました。しかし、依然として `HmMarkdownSimpleServer.cs` と `HmMarkdownListeningServer.cs` の両方で、それぞれプロバイダを呼び出すコードが存在しています。
+- **影響**:
+  - Markdown変換の責務が複数のクラスに分散しており、完全には分離されていません。
+  - 今後、変換処理に更なる修正（例えば、前処理や後処理の追加）が必要になった場合、両方のクラスを修正する必要が生じる可能性があります。
+- **該当箇所**:
+  - `CreateTempFile` メソッド (`HmMarkdownSimpleServer.cs`)
+  - `GetTotalText` メソッド (`HmMarkdownListeningServer.cs`)
 
 ---
 
@@ -87,3 +76,23 @@
   - 秀丸エディタの仕様変更に弱い作りになっています。
 - **該当箇所**:
   - プロジェクト全体、特に `HmMarkdownSimpleServer.cs`。
+
+### 3.3. 不足しているコメントと文字化け
+
+- **問題点**:
+  - 秀丸エディタとの連携など、複雑な部分に関する説明コメントが不足しています。
+  - `MarkdownPipelineProvider.cs` 内のコメントが文字化けしており、ファイルエンコーディングに問題がある可能性を示唆しています。
+- **影響**:
+  - コードの意図が理解しづらく、メンテナンスの妨げになります。
+  - 文字化けは、開発環境の違いによってさらなる問題を引き起こす可能性があります。
+- **該当箇所**:
+  - `MarkdownPipelineProvider.cs`, `HmMarkdownSimpleServer.cs` など
+
+---
+
+## 解決済みの問題
+
+### MathJaxのURLハードコード
+
+- **状態**: 解決済み
+- **詳細**: 以前はMathJaxのCDN URLがコード内にハードコードされていましたが、現在は秀丸マディタのマクロ変数 (`$MATHJAX_URL`) を介して外部から設定可能になっており、問題は解消されています。
