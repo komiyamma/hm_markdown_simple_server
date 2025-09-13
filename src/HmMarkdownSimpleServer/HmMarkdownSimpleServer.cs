@@ -6,9 +6,6 @@
 using HmNetCOM;
 using Markdig;
 using Markdig.Extensions.AutoIdentifiers;
-using Markdig.Renderers.Html;
-using Markdig.Renderers;
-using Markdig.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,12 +13,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 
 namespace HmMarkdownSimpleServer;
-
-
 
 
 
@@ -120,10 +114,7 @@ public class HmMarkdownSimpleServer
 
     private void DestroyFileWatcher()
     {
-        if (watcher != null)
-        {
-            watcher.Dispose();
-        }
+        watcher?.Dispose();
     }
 
     bool isMustReflesh = false;
@@ -143,10 +134,7 @@ public class HmMarkdownSimpleServer
     {
         cts = new CancellationTokenSource();
         CancellationToken ct = cts.Token;
-        task = Task.Run(() =>
-        {
-            return TickMethodAsync(ct);
-        }, ct);
+        task = Task.Run(async () => await TickMethodAsync(ct), ct);
     }
 
     // マークダウンファイル直接だと表示しにくいのでテンポラリファイルをtemp内に作成する。
@@ -276,7 +264,7 @@ public class HmMarkdownSimpleServer
                 }
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
         }
         return true;
@@ -289,15 +277,7 @@ public class HmMarkdownSimpleServer
         {
             string markdowntext = File.ReadAllText(currFileFullPath);
 
-            MarkdownPipeline pipeLine = null;
-            //if (is_use_math_jax > 0)
-            //{
-            //pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
-            //}
-            //else
-            //{
-            pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
-            //}
+            MarkdownPipeline pipeLine = MarkdownPipelineProvider.CreateDefault();
 
             string markdown_html = Markdig.Markdown.ToHtml(markdowntext, pipeLine);
             string tempFileFullPath = GetTemporaryFileName();
@@ -340,8 +320,8 @@ public class HmMarkdownSimpleServer
 
             if (is_use_math_jax > 0)
             {
-                html = html.Replace("$MATHJAX_URL", """<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>""");
-                html = html.Replace("$MATHJAX_CONFIG", """<script type="text/x-mathjax-config">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
+                html = html.Replace("$MATHJAX_URL", """<script src=\"https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js\"></script>""");
+                html = html.Replace("$MATHJAX_CONFIG", """<script type=\"text/x-mathjax-config\">MathJax.Hub.Config({ messageStyle: 'none' });</script>""");
                 html = html.Replace("$IS_USE_MATHJAX", "1");
             }
             else

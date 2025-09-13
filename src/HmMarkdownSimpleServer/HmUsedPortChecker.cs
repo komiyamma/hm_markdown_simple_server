@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using HmNetCOM;
 
 namespace HmMarkdownSimpleServer;
 
 internal class HmUsedPortChecker
 {
-    static List<int> portsInUse;
     public static int GetAvailablePort(int beginPort, int endPort)
     {
         try
@@ -19,7 +15,11 @@ internal class HmUsedPortChecker
             var ipGP = IPGlobalProperties.GetIPGlobalProperties();
             var tcpEPs = ipGP.GetActiveTcpListeners();
             var udpEPs = ipGP.GetActiveUdpListeners();
-            portsInUse = tcpEPs.Concat(udpEPs).Select(p => p.Port).ToList();
+
+            // 重複排除しつつ、高速検索できるよう HashSet を使用（動作は不変）
+            var portsInUse = new HashSet<int>(
+                tcpEPs.Select(p => p.Port).Concat(udpEPs.Select(p => p.Port))
+            );
 
             for (int port = beginPort; port <= endPort; ++port)
             {
@@ -28,7 +28,8 @@ internal class HmUsedPortChecker
                     return port;
                 }
             }
-        } catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             Hm.OutputPane.Output(ex.Message + "\r\n");
         }

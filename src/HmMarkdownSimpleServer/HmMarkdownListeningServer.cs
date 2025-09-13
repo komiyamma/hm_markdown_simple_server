@@ -1,18 +1,11 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using HmNetCOM;
 using Markdig;
-using Markdig.Extensions.AutoIdentifiers;
-using System.Security.AccessControl;
-using System.Security.Policy;
 
 namespace HmMarkdownSimpleServer;
 
@@ -45,7 +38,7 @@ public class HmMarkdownListeningServer
         {
             dasmr = new DllAssemblyResolver();
         }
-        catch (Exception e)
+        catch (Exception)
         {
         }
 
@@ -61,7 +54,7 @@ public class HmMarkdownListeningServer
             cts = new CancellationTokenSource();
             _ = Task.Run(() => StartTask(cts.Token), cts.Token);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // Hm.OutputPane.Output(e.Message + "\r\n");
         }
@@ -76,19 +69,12 @@ public class HmMarkdownListeningServer
 
             string markdown = Hm.Edit.TotalText ?? "";
 
-            MarkdownPipeline pipeLine = null;
-            //if (HmMarkdownSimpleServer.is_use_math_jax > 0) {
-            //    pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().UseMathematics().Build();
-            //}
-            //else
-            //{
-            pipeLine = new MarkdownPipelineBuilder().UseAutoIdentifiers(AutoIdentifierOptions.GitHub).UseAdvancedExtensions().UseEmojiAndSmiley().UsePragmaLines().Build();
-            //}
+            MarkdownPipeline pipeLine = MarkdownPipelineProvider.CreateDefault();
 
             string html = Markdig.Markdown.ToHtml(markdown, pipeLine);
             return html;
         }
-        catch (Exception e)
+        catch (Exception)
         {
         }
         return "";
@@ -158,9 +144,9 @@ public class HmMarkdownListeningServer
                                 string decode_url = WebUtility.UrlDecode(absolute_uri);
                                 DefaultBrowserLauncher.Launch(decode_url);
                             }
-                            catch (Exception e)
+                            catch (Exception ex)
                             {
-                                Hm.OutputPane.Output(e.Message + "\r\n");
+                                Hm.OutputPane.Output(ex.Message + "\r\n");
                             }
                         }
 
@@ -172,35 +158,35 @@ public class HmMarkdownListeningServer
                     }
                     response.Close();
                 }
-                catch (HttpListenerException e)
+                catch (HttpListenerException ex)
                 {
-                    if (e.ErrorCode == 995)
+                    if (ex.ErrorCode == 995)
                     {
                         // キャンセルされた場合は、例外が発生するので、無視する。
                     }
                     else
                     {
-                        Hm.OutputPane.Output(e.Message + "\r\n");
+                        Hm.OutputPane.Output(ex.Message + "\r\n");
                     }
                 }
-                catch (OperationCanceledException e)
+                catch (OperationCanceledException)
                 {
                     // キャンセルされた場合は、例外が発生するので、無視する。
                 }
-                catch (ObjectDisposedException e)
+                catch (ObjectDisposedException)
                 {
                     // キャンセルされた場合は、例外が発生するので、無視する。
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Hm.OutputPane.Output(e.Message + "\r\n");
+                    Hm.OutputPane.Output(ex.Message + "\r\n");
                 }
             }
 
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Hm.OutputPane.Output(e.Message + "\r\n");
+            Hm.OutputPane.Output(ex.Message + "\r\n");
         }
 
         return Task.CompletedTask;
@@ -214,7 +200,7 @@ public class HmMarkdownListeningServer
 
             _ = Task.Run(() => CloseTask());
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // Hm.OutputPane.Output(e.Message + "\r\n");
         }
