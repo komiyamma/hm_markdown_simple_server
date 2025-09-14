@@ -52,25 +52,4 @@
   - `CreateTempFile` メソッド (`HmMarkdownSimpleServer.cs`)
   - `GetTotalText` メソッド (`HmMarkdownListeningServer.cs`)
 
----
 
-## 3. 保守性の問題 (Maintainability Issues)
-
-### 3.1. マジックストリングの使用
-
-- **問題点**:
-  HTMLテンプレートの組み立てに、`$CSS_URI_ABSOLUTE` のような文字列（マジックストリング）を `String.Replace` で置換する手法が使われています。
-- **影響**:
-  - テンプレートの構造が分かりにくく、変更が容易ではありません。
-  - タイプミスなど、単純なミスがバグの原因となりやすいです。
-  - より安全なテンプレートエンジンの利用が推奨されます。
-- **該当箇所**:
-  - `CreateTempFile` メソッド (`HmMarkdownSimpleServer.cs`)
-
-
-## 解決済みの問題
-
-### MathJaxのURLハードコード
-
-- **状態**: 解決済み
-- **詳細**: 以前はMathJaxのCDN URLがコード内にハードコードされていましたが、現在は秀丸マディタのマクロ変数 (`$MATHJAX_URL`) を介して外部から設定可能になっており、問題は解消されています。
